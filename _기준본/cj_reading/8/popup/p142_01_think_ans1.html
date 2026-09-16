@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <link rel="stylesheet" href="../include/contentsUI/css/index.css">
+  <link rel="stylesheet" type="text/css" href="../include/css/common.css">
+
+  <title>p142_01_think_ans1</title>
+</head>
+<body>
+  <div class="js-iframePopupContainer js-scale iframePopup" data-use="exanswer">
+    <div class="popContentContainer">
+      <!-- popHeader -->
+      <header class="popHeader">
+        <div class="popHeaderInner">
+          <h2 class="popHeaderTit">
+            <span>예시 답안</span>
+          </h2>
+
+          <div class="controlsBox" data-style="default">
+            <div class="js-controlBoxContainer mediaControl" data-ply-type="language" data-ply-idx="2"></div>
+            <button class="js-korScriptBtn korScriptBtn" data-ply-idx="2"></button>
+          </div>
+        </div>
+        <button class="js-closePopBtn closePopBtn"></button>
+      </header>
+
+      <!-- popContentBox -->
+      <div class="popContentBox">
+        <!-- popContent -->
+        <div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="0">
+          <div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-controls="play, pause, stop" data-script-mode="toggle" data-ply-idx="2" data-scroll-idx="0">
+            <!-- scriptContainer -->
+            <div class="js-languageContainer scriptContainer" data-ply-idx="2">
+              <!-- Paragraph -->
+              <div class="Paragraph">
+
+								<comp-script-box speaker=" " dot>
+									<script-cont src="../media/mp3/3_142_think_about_this_ex_01.mp3" en="Yes, I had my favorite sneakers that became too small for me." kr="해석x"></script-cont>
+									<script-cont src="../media/mp3/3_142_think_about_this_ex_02.mp3" en="I gave them to a friend who wanted them." kr="해석x"></script-cont>
+									<script-cont src="../media/mp3/3_142_think_about_this_ex_03.mp3" en="Yes, I had some clothes that became too small for me." kr="해석x"></script-cont>
+									<script-cont src="../media/mp3/3_142_think_about_this_ex_04.mp3" en="I donated them to a children’s center." kr="해석x"></script-cont>
+								</comp-script-box>
+
+							</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../include/js/config.js"></script>
+  <script src="../include/js/pageManager.js"></script>
+  <script src="../include/js/components.js"></script>
+  <script src="../include/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+    });
+  </script>
+</body>
+</html>

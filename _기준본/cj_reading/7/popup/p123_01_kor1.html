@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <link rel="stylesheet" href="../include/contentsUI/css/index.css">
+  <link rel="stylesheet" type="text/css" href="../include/css/common.css">
+
+  <title>p123_01_kor1</title>
+  <style>
+    /* 인덴트 */
+    .scriptContainer .scriptBox:not(.titBox, .subTitBox, .list) .Script:first-of-type {margin-left: 20px;}
+  </style>
+</head>
+<body>
+  <div class="js-scale iframePopup" data-use="kor">
+    <div class="popContentContainer">
+      <!-- popHeader -->
+      <header class="popHeader">
+        <div class="popHeaderInner">
+          <h2 class="popHeaderTit">
+            <span>해석</span>
+          </h2>
+        </div>
+        <button class="js-closePopBtn closePopBtn"></button>
+      </header>
+      <!-- popContentBox -->
+      <div class="popContentBox">
+        <!-- popContent -->
+        <div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="1">
+          <div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-idx="1" data-scroll-idx="1">
+            <!-- scriptContainer -->
+            <div class="js-languageContainer scriptContainer" data-ply-idx="1">
+              <!-- Paragraph -->
+              <div class="Paragraph">
+				<!-- scriptBox -->
+				<comp-script-box>
+					<script-cont src="../media/mp3/3_123_read_02.mp3" en="The JWST is the most powerful telescope in history." kr="JWST는 역사상 가장 강력한 망원경입니다."></script-cont>
+					<script-cont src="../media/mp3/3_123_read_03.mp3" en="It’s as wide as a tennis court and as tall as a three-story building." kr="그것은<span style='left:-1079px'>테니스 코트만큼 넓고, 3층 건물만큼 높습니다.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_123_read_04.mp3" en="If a person stood next to the telescope, the person would look like a tiny ant." kr="만약 어떤 사람이 그 망원경 옆에 선다면, 그 사람은 아주 작은 개미처럼<span style='left:-187px'>보일 것입니다.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_123_read_05.mp3" en="To observe deep into space, it has 18 golden mirrors that work like one big eye." kr="우주 깊은 곳을 관측하기 위해, 그것은<span style='left:-670px'>하나의 큰 눈처럼 작동하는 18개의 금빛 거울을 가지고 있습니다.</span>"></script-cont>
+				</comp-script-box>
+				<!-- scriptBox -->
+				<comp-script-box>
+					<script-cont scrollTop="529" src="../media/mp3/3_123_read_06.mp3" en="How did scientist launch such a large telescope into space?" kr="과학자들은 어떻게 그렇게 큰 망원경을 우주로 발사했나요?"></script-cont>
+				</comp-script-box>
+				<!-- scriptBox -->
+				<comp-script-box>
+					<script-cont scrollTop="529" src="../media/mp3/3_123_read_07.mp3" en="We found the answer in paper folding." kr="우리는 종이접기에서 답을 찾았습니다."></script-cont>
+					<script-cont scrollTop="529" src="../media/mp3/3_123_read_08.mp3" en="The JWST was folded twelve times so that it could fit into a space rocket." kr="JWST는 우주 로켓에 꼭<span style='left:-800px'>들어맞도록 열두 번 접혔습니다.</span>"></script-cont>
+					<script-cont scrollTop="871" src="../media/mp3/3_123_read_09.mp3" en="Then the telescope traveled 1.5 million kilometers away from Earth." kr="그 후 망원경은 지구에서 150만 킬로미터 떨어진 곳까지 이동했습니다."></script-cont>
+					<script-cont scrollTop="871" src="../media/mp3/3_123_read_10.mp3" en="After the JWST was launched, it spent about a month traveling to its final location." kr="JWST가 발사된 후에, 최종 위치까지 도달하는 데 약 한 달이<span style='left:-351px'>걸렸습니다.</span>"></script-cont>
+					<script-cont scrollTop="871" src="../media/mp3/3_123_read_11.mp3" en="During this time, it was slowly unfolded, piece by piece, like a blooming flower." kr="이 시간 동안<span style='left:-892px'>망원경은 피어나는 꽃처럼, 조금씩 천천히 펼쳐졌습니다.</span>"></script-cont>
+				</comp-script-box>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../include/js/config.js"></script>
+  <script src="../include/js/pageManager.js"></script>
+  <script src="../include/js/components.js"></script>
+  <script src="../include/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+    });
+  </script>
+</body>
+</html>

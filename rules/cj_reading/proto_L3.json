@@ -1,0 +1,233 @@
+{
+ "items": {
+  "assets.bg": {
+   "source": "css",
+   "value": "images/{page}/read_bg.png"
+  },
+  "assets.video": {
+   "source": "html",
+   "value": "media/mp4/l{lesson}_read.mp4"
+  },
+  "assets.videoScript": {
+   "source": "html",
+   "value": "media/mp4/l{lesson}_read_script.mp4"
+  },
+  "assets.vtt": {
+   "source": "html",
+   "value": "media/mp4/l{lesson}_read.vtt"
+  },
+  "info.pageKinds": {
+   "note": "들머리는 뼈대가 본문과 다릅니다",
+   "source": "html",
+   "value": {
+    "body": [
+     "p052_01"
+    ],
+    "intro": [
+     "p050_01"
+    ]
+   }
+  },
+  "measure.gapKr": {
+   "note": "프로토 HTML 로는 알 수 없음 — 코드 값 유지",
+   "source": "none",
+   "value": null
+  },
+  "measure.safeBody": {
+   "note": "프로토 HTML 로는 알 수 없음 — 코드 값 유지",
+   "source": "none",
+   "value": null
+  },
+  "measure.safePop": {
+   "note": "프로토 HTML 로는 알 수 없음 — 코드 값 유지",
+   "source": "none",
+   "value": null
+  },
+  "popup.btn.dictationBtn": {
+   "source": "html",
+   "value": 4
+  },
+  "popup.btn.exAnswerBtn": {
+   "source": "html",
+   "value": 11
+  },
+  "popup.btn.korBtn": {
+   "source": "html",
+   "value": 3
+  },
+  "popup.btn.listenTotalBtn": {
+   "source": "html",
+   "value": 2
+  },
+  "popup.btn.questionBtn": {
+   "source": "html",
+   "value": 7
+  },
+  "popup.btn.thinkAboutBtn": {
+   "source": "html",
+   "value": 8
+  },
+  "popup.btn.videoPopBtn": {
+   "source": "html",
+   "value": 1
+  },
+  "popup.quiz.other": {
+   "note": "고른 1쪽이 모두 7 — 마지막 쪽을 함께 골라야 예외가 보입니다",
+   "source": "html",
+   "value": 7
+  },
+  "popup.thinkabout": {
+   "source": "html",
+   "value": 8
+  },
+  "popup.video": {
+   "source": "html",
+   "value": 1
+  },
+  "skeleton.body.css": {
+   "note": "1쪽 모두 같음",
+   "source": "html",
+   "value": [
+    "include/contentsUI/css/index.css",
+    "include/css/common.css",
+    "include/css/reading.css",
+    "css/{page}.css"
+   ]
+  },
+  "skeleton.body.js": {
+   "note": "1쪽 모두 같음",
+   "source": "html",
+   "value": [
+    "include/contentsUI/js/config.js",
+    "include/contentsUI/js/index.js",
+    "include/contentsUI/js/contentUI.js",
+    "include/js/config.js",
+    "include/js/pageManager.js",
+    "include/js/components.js",
+    "include/js/common.js",
+    "include/js/reading.js",
+    "js/{page}.js"
+   ]
+  },
+  "skeleton.body.speedBtn": {
+   "note": "1쪽 모두 같음",
+   "source": "html",
+   "value": "0.8,1.0,1.2,1.5"
+  },
+  "skeleton.intro.css": {
+   "note": "1쪽 모두 같음",
+   "source": "html",
+   "value": [
+    "include/contentsUI/css/index.css",
+    "include/css/common.css",
+    "include/css/read_smart.css"
+   ]
+  },
+  "skeleton.intro.js": {
+   "note": "1쪽 모두 같음",
+   "source": "html",
+   "value": [
+    "include/contentsUI/js/config.js",
+    "include/contentsUI/js/index.js",
+    "include/contentsUI/js/contentUI.js",
+    "include/js/config.js",
+    "include/js/pageManager.js",
+    "include/js/components.js",
+    "include/js/common.js"
+   ]
+  },
+  "skeleton.intro.speedBtn": {
+   "note": "1쪽 모두 같음",
+   "source": "html",
+   "value": ""
+  },
+  "sound.col.id": {
+   "source": "xlsx",
+   "value": 2
+  },
+  "sound.col.text": {
+   "source": "xlsx",
+   "value": 1
+  },
+  "sound.corner": {
+   "source": "xlsx",
+   "value": [
+    "Study Points",
+    "Self-Check",
+    "IWL",
+    "Warm-Up",
+    "Listen-Smart",
+    "LnT-A",
+    "Word-A",
+    "LnT-B",
+    "LnT-C",
+    "EtC-A",
+    "EtC-B",
+    "Sounds",
+    "BWR-A",
+    "BWR-B",
+    "Read-Smart",
+    "Read",
+    "Question",
+    "Word",
+    "Think-about-This",
+    "Mission",
+    "AWR-A",
+    "AWR-B",
+    "AWR-C",
+    "Beyond",
+    "FoL-A",
+    "FoL-B"
+   ]
+  },
+  "sound.idPattern": {
+   "note": "ID 375개 중 375개가 이 모양",
+   "source": "xlsx",
+   "value": "^\\d+-(\\d{3})-(.+?)-(\\d+(?:-\\d+)*)$"
+  },
+  "sound.mp3": {
+   "note": "페이지 mp3 13개 중 12개가 시트 ID 와 맞음",
+   "source": "xlsx",
+   "value": {
+    "case": "lower",
+    "sep": "_"
+   }
+  },
+  "sound.sheet": {
+   "note": "본 것: 3과",
+   "source": "xlsx",
+   "value": "%d과"
+  },
+  "storyboard.sheet.Dictation": {
+   "source": "xlsx",
+   "value": true
+  },
+  "storyboard.sheet.Lesson 3_전자저작물용 지시문 모음": {
+   "source": "xlsx",
+   "value": true
+  },
+  "storyboard.sheet.구문 해설": {
+   "source": "xlsx",
+   "value": true
+  },
+  "storyboard.sheet.미니 단어장": {
+   "source": "xlsx",
+   "value": true
+  }
+ },
+ "kind": "proto",
+ "made": "2026-09-16 17:02",
+ "notes": [
+  "시트에서 못 찾은 mp3: 3_052_think_about_this_01"
+ ],
+ "proto": {
+  "lesson": 3,
+  "ops": "E:\\00_works\\2026\\2026_cj_midd3_eng\\00_개발물\\EBOOK\\중학교 영어 3_소영순\\app\\resource\\contents\\lesson03\\ops",
+  "pages": [
+   "p050_01",
+   "p052_01"
+  ]
+ },
+ "recipe": "cj_reading",
+ "schema": 1
+}
