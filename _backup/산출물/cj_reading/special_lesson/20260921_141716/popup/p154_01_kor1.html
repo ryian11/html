@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <link rel="stylesheet" href="../include/contentsUI/css/index.css">
+  <link rel="stylesheet" type="text/css" href="../include/css/common.css">
+
+  <title>p154_01_kor1</title>
+  <style>
+    /* 인덴트 */
+    .scriptContainer .scriptBox:not(.titBox, .subTitBox, .list) .Script:first-of-type {margin-left: 20px;}
+  </style>
+</head>
+<body>
+  <div class="js-scale iframePopup" data-use="kor">
+    <div class="popContentContainer">
+      <!-- popHeader -->
+      <header class="popHeader">
+        <div class="popHeaderInner">
+          <h2 class="popHeaderTit">
+            <span>해석</span>
+          </h2>
+        </div>
+        <button class="js-closePopBtn closePopBtn"></button>
+      </header>
+      <!-- popContentBox -->
+      <div class="popContentBox">
+        <!-- popContent -->
+        <div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="1">
+          <div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-idx="1" data-scroll-idx="1">
+            <!-- scriptContainer -->
+            <div class="js-languageContainer scriptContainer" data-ply-idx="1">
+              <!-- Paragraph -->
+              <div class="Paragraph">
+				<!-- scriptBox -->
+				<comp-script-box>
+					<script-cont src="../media/mp3/3_154_read_01.mp3" en="The counselor observed, listened, and said to Diana," kr="상담사는 Diana를 관찰하고 이야기를 들은 뒤 말했다."></script-cont>
+					<script-cont src="../media/mp3/3_154_read_02.mp3" en="“I’m going to talk with your mother for a moment." kr="“잠시<span style='left:-1087px'>어머니와 이야기하고 올게요.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_154_read_03.mp3" en="Wait for us here.”" kr="여기서<span style='left:-912px'>기다리세요.”</span>"></script-cont>
+					<script-cont src="../media/mp3/3_154_read_04.mp3" en="As he left, he turned on the radio, which filled the room with soft music." kr="그는 자리를 떠나면서 라디오를 켰고, 그것은 방 안을 부드러운 음악으로 가득<span style='left:-130px'>채웠다.</span>"></script-cont>
+				</comp-script-box>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../include/js/config.js"></script>
+  <script src="../include/js/pageManager.js"></script>
+  <script src="../include/js/components.js"></script>
+  <script src="../include/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <link rel="stylesheet" href="../include/contentsUI/css/index.css">
+  <link rel="stylesheet" type="text/css" href="../include/css/common.css">
+
+  <title>p155_01_kor1</title>
+  <style>
+    /* 인덴트 */
+    .scriptContainer .scriptBox:not(.titBox, .subTitBox, .list) .Script:first-of-type {margin-left: 20px;}
+  </style>
+</head>
+<body>
+  <div class="js-scale iframePopup" data-use="kor">
+    <div class="popContentContainer">
+      <!-- popHeader -->
+      <header class="popHeader">
+        <div class="popHeaderInner">
+          <h2 class="popHeaderTit">
+            <span>해석</span>
+          </h2>
+        </div>
+        <button class="js-closePopBtn closePopBtn"></button>
+      </header>
+      <!-- popContentBox -->
+      <div class="popContentBox">
+        <!-- popContent -->
+        <div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="1">
+          <div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-idx="1" data-scroll-idx="1">
+            <!-- scriptContainer -->
+            <div class="js-languageContainer scriptContainer" data-ply-idx="1">
+              <!-- Paragraph -->
+              <div class="Paragraph">
+				<!-- scriptBox -->
+				<comp-script-box>
+					<script-cont src="../media/mp3/3_155_read_01.mp3" en="For a moment, Diana forgot where she was." kr="잠시 동안 Diana는 자신이 어디에 있는지 잊었다."></script-cont>
+					<script-cont src="../media/mp3/3_155_read_02.mp3" en="She not only smiled but also closed her eyes as she followed the rhythm of the music." kr="그녀는 미소를<span style='left:-902px'>지었을 뿐만 아니라, 음악의 리듬을 따르며 눈을 감기도 했다.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_155_read_03.mp3" en="The music playing from the small radio made Diana feel joyful." kr="작은 라디오에서 흘러나오는 음악은 Diana를 즐겁게<span style='left:-428px'>만들었다.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_155_read_04.mp3" en="Her body moved gracefully." kr="그녀의 몸은 우아하게 움직였다."></script-cont>
+					<script-cont src="../media/mp3/3_155_read_05.mp3" en="Diana’s mother watched her dancing from the door." kr="Diana의 어머니는 문가에서 그녀가 춤추고 있는 것을 지켜보았다."></script-cont>
+					<script-cont src="../media/mp3/3_155_read_06.mp3" en="She had never seen her daughter move like that before!" kr="그녀는<span style='left:-1051px'>전에 딸이 이렇게 움직이는 모습을 본 적이 없었다!</span>"></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_155_read_07.mp3" en="The counselor coughed a little, then said, “Your daughter is fine." kr="상담사가<span style='left:-1042px'>약간 기침을 한 뒤 말했다. “당신의 딸은 괜찮아요.</span>"></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_155_read_08.mp3" en="Your daughter is a dancer!" kr="당신의 딸은 댄서예요!"></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_155_read_09.mp3" en="I recommend taking her to dance class.”" kr="그녀를 댄스 수업에<span style='left:-885px'>보내는 것을 추천합니다.”</span>"></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_155_read_10.mp3" en="“Am I a dancer?” thought Diana." kr="“내가 댄서라고?” Diana는 생각했다."></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_155_read_11.mp3" en="“I’m a dancer!”" kr="“나는 댄서야!”"></script-cont>
+				</comp-script-box>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../include/js/config.js"></script>
+  <script src="../include/js/pageManager.js"></script>
+  <script src="../include/js/components.js"></script>
+  <script src="../include/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+    });
+  </script>
+</body>
+</html>

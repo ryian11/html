@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <link rel="stylesheet" href="../include/contentsUI/css/index.css">
+  <link rel="stylesheet" type="text/css" href="../include/css/common.css">
+
+  <title>p153_01_kor1</title>
+  <style>
+    /* 인덴트 */
+    .scriptContainer .scriptBox:not(.titBox, .subTitBox, .list) .Script:first-of-type {margin-left: 20px;}
+  </style>
+</head>
+<body>
+  <div class="js-scale iframePopup" data-use="kor">
+    <div class="popContentContainer">
+      <!-- popHeader -->
+      <header class="popHeader">
+        <div class="popHeaderInner">
+          <h2 class="popHeaderTit">
+            <span>해석</span>
+          </h2>
+        </div>
+        <button class="js-closePopBtn closePopBtn"></button>
+      </header>
+      <!-- popContentBox -->
+      <div class="popContentBox">
+        <!-- popContent -->
+        <div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="1">
+          <div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-idx="1" data-scroll-idx="1">
+            <!-- scriptContainer -->
+            <div class="js-languageContainer scriptContainer" data-ply-idx="1">
+              <!-- Paragraph -->
+              <div class="Paragraph">
+				<!-- scriptBox -->
+				<comp-script-box>
+					<script-cont src="../media/mp3/3_153_read_01.mp3" en="That afternoon, Diana’s mother got bad news from the school." kr="그날 오후, Diana의 어머니는 학교에서 안 좋은 소식을 들었다."></script-cont>
+					<script-cont src="../media/mp3/3_153_read_02.mp3" en="The teacher said, “Diana has been having difficulties with math." kr="선생님은 “Diana가 수학에 어려움을 겪고 있어요."></script-cont>
+					<script-cont src="../media/mp3/3_153_read_03.mp3" en="She may fail her math test because she can’t solve equations.”" kr="그녀는 방정식을 풀지 못해서 수학 시험에 떨어질 수도<span style='left:-458px'>있어요.”라고 말씀하셨다.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_153_read_04.mp3" en="Diana’s mother decided to send Diana to the after-school program, but it didn’t help." kr="Diana의 어머니는 Diana를 방과 후<span style='left:-552px'>프로그램에 보내기로 결정했지만, 그것은 도움이 되지 않았다.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_153_read_05.mp3" en="Equations were like a foreign language to Diana." kr="방정식은 Diana에게 외국어 같았다."></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_153_read_06.mp3" en="Her problem couldn’t be solved on her own." kr="그녀의<span style='left:-980px'>문제는 그녀 스스로의 힘으로 해결될 수 없었다.</span>"></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_153_read_07.mp3" en="Her mother wondered if Diana was okay." kr="그녀의 어머니는 Diana가<span style='left:-803px'>괜찮은지 궁금했다.</span>"></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_153_read_08.mp3" en="They went to see a counselor." kr="그들은 상담사를 만나러 갔다."></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_153_read_09.mp3" en="After-school Program" kr="해석x"></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_153_read_10.mp3" en="Counselor's Office" kr="해석x"></script-cont>
+					<script-cont scrollTop="431" src="../media/mp3/3_153_read_11.mp3" en="Diana may fail her math test because she can’t solve equations." kr="해석x"></script-cont>
+				</comp-script-box>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../include/js/config.js"></script>
+  <script src="../include/js/pageManager.js"></script>
+  <script src="../include/js/components.js"></script>
+  <script src="../include/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+    });
+  </script>
+</body>
+</html>

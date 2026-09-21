@@ -1,0 +1,1166 @@
+# -*- coding: utf-8 -*-
+"""Reading 본문 페이지 생성 엔진 (단원 무관)
+
+  python read_gen.py 6            → lesson06/ops 에 바로 쓴다
+  python read_gen.py 6 --out tmp  → tmp 폴더에 쓴다
+
+단원별 원고·레이아웃 값은 data<N>.py 에 있다.
+측정값(scrolls<N>.py / krlayout<N>.py / popscroll<N>.py)은 read_measure.py 가 만든다.
+"""
+import os, re, sys, importlib, openpyxl
+import read_paths as P
+
+PAGES = ORDER = IMG = None
+WORDBTN = CSS_LAYOUT = READSMART = None
+SCROLLS = KRLAYOUT = POPKOR1 = POPALL = None
+WORDPAGE = {}
+LESSON = None
+SB = None
+OUT = None
+
+
+_HAS_DIC = {}
+
+
+def has_dictation():
+    """이 단원에 딕테이션이 있나 — 스토리보드에 'Dictation' 시트가 있는지로 본다.
+
+    Special Lesson 처럼 딕테이션이 아예 없는 단원도 있다. 그러면 단추도 팝업도 내지 않는다.
+    (딕테이션 팝업 파일 자체는 이 레시피가 아니라 딕테이션 작업에서 만든다.)
+    """
+    if SB in _HAS_DIC:
+        return _HAS_DIC[SB]
+    ok = False
+    try:
+        wb = openpyxl.load_workbook(SB, read_only=True)
+        ok = any('dictation' in n.lower() for n in wb.sheetnames)
+        wb.close()
+    except Exception:
+        ok = False
+    _HAS_DIC[SB] = ok
+    return ok
+
+
+def _page_has_word(pg):
+    """그 쪽에 미니 단어장 낱말이 있나 ([mark:n: …] 가 붙어 있나)"""
+    chunks = []
+    t = pg.get('title')
+    if t:
+        chunks.append(t.get('mark', '') or '')
+    for kind, b in pg['blocks']:
+        if kind in ('subtit', 'label'):
+            chunks.append(b.get('mark', '') or '')
+            chunks.append(b.get('en', '') or '')
+        else:
+            chunks += [en for _, en, _ in b]
+    return '[mark:' in ''.join(chunks)
+
+
+def load_lesson(n, out=None):
+    """data<N>.py 와 (있으면) 측정값 모듈을 읽어 전역에 올린다."""
+    global PAGES, ORDER, IMG, WORDBTN, CSS_LAYOUT, READSMART
+    global SCROLLS, KRLAYOUT, POPKOR1, POPALL, WORDPAGE, LESSON, SB, OUT
+    LESSON = n
+    D = importlib.import_module('data%s' % n)
+    PAGES, ORDER, IMG = D.PAGES, D.ORDER, D.IMG
+    WORDBTN, CSS_LAYOUT, READSMART = D.WORDBTN, D.CSS_LAYOUT, D.READSMART
+    # 미니 단어장 묶음은 시트에서 빈 줄로 나뉘어 오고, **낱말이 있는 쪽에만** 있다.
+    # 자리 번호로 세면 낱말 없는 쪽(Special Lesson 156쪽)이 끼었을 때 하나씩 밀린다.
+    WORDPAGE = {}
+    _gi = 0
+    for _p in ORDER:
+        if _page_has_word(PAGES[_p]):
+            WORDPAGE[_p] = _gi
+            _gi += 1
+    SB = P.storyboard(n)
+    OUT = out or P.ops(n)
+
+    def opt(mod, attr, default):
+        try:
+            return getattr(importlib.import_module(mod % n), attr)
+        except Exception:
+            return default
+    SCROLLS = opt('scrolls%s', 'SCROLLS', {})
+    KRLAYOUT = opt('krlayout%s', 'KR', {})
+    POPKOR1 = opt('popscroll%s', 'KOR1', {})
+    POPALL = opt('popscroll%s', 'ALL', {})
+    return D
+
+
+def underlined(cell):
+    """엑셀 서식에서 밑줄 친 글자만 뽑는다 (없으면 '')"""
+    v = cell.value
+    try:
+        from openpyxl.cell.rich_text import TextBlock
+    except ImportError:
+        return ''
+    if not hasattr(v, '__iter__') or isinstance(v, str):
+        return ''
+    out = [b.text for b in v if isinstance(b, TextBlock) and getattr(b.font, 'u', None)]
+    return ' '.join(x.strip() for x in out if x.strip())
+
+
+def load_words():
+    wb_ = openpyxl.load_workbook(SB, data_only=True, rich_text=True)
+    ws = wb_['미니 단어장']
+    groups, cur = [], []
+    for i, row in enumerate(ws.iter_rows(), 1):
+        if i == 1:
+            continue
+        r = [c.value for c in row]
+        w = (r[0] or '').strip() if isinstance(r[0], str) else r[0]
+        if not w:
+            if cur:
+                groups.append(cur); cur = []
+            continue
+        if str(w).startswith('아래에'):
+            break
+        cells = [str(x).strip() if x else '' for x in r[:6]]
+        cells.append(underlined(row[2]) if len(row) > 2 else '')   # 예문의 밑줄 부분
+        cur.append(cells)
+    if cur:
+        groups.append(cur)
+    return groups
+
+
+def _pgnum(v):
+    """스토리보드 '쪽' 칸 → 숫자만. '152쪽' · ' 152 ' 둘 다 '152' 로."""
+    m = re.search(r'\d+', str(v or ''))
+    return m.group(0) if m else str(v or '').strip()
+
+
+def load_syntax():
+    ws = openpyxl.load_workbook(SB, data_only=True)['구문 해설']
+    out = {}
+    for i, r in enumerate(ws.iter_rows(values_only=True), 1):
+        if i == 1 or not r[0]:
+            continue
+        pg = _pgnum(r[0])            # '152쪽' 도 '152' 로
+        out.setdefault(pg, []).append((str(r[1]).strip(), str(r[2]).strip()))
+    return out
+
+
+POS = '명형동부전접대감수관'
+
+
+def split_mean(s):
+    """'동) 접근하다, 이용하다' -> [('동','접근하다, 이용하다')]  / '형) 못된 동) 의미하다' -> 2쌍
+    품사 기호는 문자열 맨 앞이거나 공백 뒤에 오는 '<품사>) ' 만 인정한다.
+    ('(신문 기사 등의) 제목' / '정보를 제공하는 활동)' 같은 뜻 안의 괄호와 구분)"""
+    s = s.strip()
+    marks = [m for m in re.finditer(r'(?:(?<=^)|(?<=\s))([%s])\)\s*' % POS, s)]
+    if not marks:
+        return [('', s)]
+    pairs = []
+    for i, m in enumerate(marks):
+        end = marks[i + 1].start() if i + 1 < len(marks) else len(s)
+        pairs.append((m.group(1), s[m.end():end].strip()))
+    return pairs
+
+
+def ex_mp3(word):
+    return re.sub(r'\s+', '_', word.replace('...', '').strip()) + '_ex'
+
+
+def bold_word(ex, word, marked=''):
+    """예문에서 굵게 할 곳을 <b>로 감싼다.
+    엑셀에 밑줄로 표시된 부분이 있으면 그것이 기준, 없으면 표제어 어간으로 찾는다."""
+    if marked:
+        i = ex.find(marked)
+        if i >= 0:
+            return ex[:i] + '<b>' + marked + '</b>' + ex[i + len(marked):], True
+    stem = word.strip()
+    if ' ' in stem:
+        pat = re.compile(re.escape(stem).replace(r'\ ', r'\s+'), re.I)
+    else:
+        base = re.sub(r'(e|y)$', '', stem)
+        pat = re.compile(r'\b' + re.escape(base) + r'[a-z]*', re.I)
+    m = pat.search(ex)
+    if not m:
+        return ex, False
+    return ex[:m.start()] + '<b>' + m.group(0) + '</b>' + ex[m.end():], True
+
+
+# ---------- 본문 마크업 ----------
+def lt(cls, scroll, src, text):
+    a = ''
+    if cls:
+        a += ' class="%s"' % cls
+    if scroll:
+        a += ' scrollTop="%s"' % scroll
+    return '<comp-language-target%s src="media/mp3/%s.mp3" text="%s"></comp-language-target>' % (a, src, text)
+
+
+def body_html(page, scrolls):
+    p = PAGES[page]
+    n = p['num']
+    L = []
+    t = p['title']
+    if t:
+        L.append('              ' + lt(t['cls'], scrolls.get(t['src'], ''), t['src'], t['mark']))
+        L.append('')
+    for kind, blk in p['blocks']:
+        if kind == 'label':
+            L.append('              ' + lt(blk['cls'], scrolls.get(blk['src'], ''), blk['src'], blk['en']))
+            L.append('')
+    L.append('              <div class="ParagraphBox">')
+    pi = 0
+    for kind, blk in p['blocks']:
+        if kind in ('label',):
+            continue
+        if kind == 'subtit':
+            L.append('              </div>')
+            L.append('')
+            L.append('              ' + lt(blk['cls'], scrolls.get(blk['src'], ''), blk['src'], blk['mark']))
+            L.append('')
+            L.append('              <div class="ParagraphBox Tip">')
+            continue
+        cls = 'Paragraph tipItem' if kind == 'tip' else 'Paragraph'
+        extra = (p.get('paracls') or {}).get(pi)
+        if extra:
+            cls += ' ' + extra
+        pi += 1
+        L.append('                <!-- Paragraph -->')
+        L.append('                <div class="%s">' % cls)
+        for idx, en, kr in blk:
+            src = '3_%s_read_%s' % (n, idx)
+            L.append('                  ' + lt('', scrolls.get(src, ''), src, en))
+        L.append('                </div>')
+    L.append('              </div>')
+    return '\n'.join(L)
+
+
+# ---------- 페이지 ----------
+HEAD = '''<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=1280, height=720, initial-scale=1.0">
+
+  <link rel="stylesheet" href="include/contentsUI/css/index.css">
+  <link rel="stylesheet" href="include/css/common.css">
+  <link rel="stylesheet" href="include/css/reading.css">
+  <link rel="stylesheet" href="css/{page}.css">
+
+  <title>{page}</title>
+</head>
+<body>
+  <div id="wrap" class="js-scale" data-snd-ctl="true">
+    <div id="container" data-use="read">
+      <div class="js-scrollContainer scrollContainer mainContent" data-style="custom" data-scroll-idx="0">
+        <div class="js-scrollBox scrollBox readingBox" data-scroll-idx="0">
+          <div class="js-player Player js-selectChangePlayer readingCont" data-ply-type="language" data-ply-idx="1" data-ply-controls="play, pause, stop, progress" data-ply-opts="speed, again" data-speed-btn="0.8,1.0,1.2,1.5" data-ply-mode="basic">
+            <div class="readingBtnBox Top">
+              <div class="btnBox">
+                <button class="js-openPopBtn videoPopBtn" data-pop-idx="1"></button>
+              </div>
+
+              <div class="btnBox">
+                <button class="js-openPopBtn listenTotalBtn" data-pop-idx="2"></button>
+                <button class="js-bgCover bgCoverBtn" data-ply-idx="1"></button>
+              </div>
+            </div>
+            <div class="js-languageContainer languageContainer js-readHide" data-ply-idx="1">
+{body}
+            </div>
+
+            <div class="js-languageContainer languageContainer js-readShow" data-ply-idx="1"></div>
+
+{botbtn}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 영상 팝업 -->
+    <div class="js-popupContent popup" data-pop-idx="1" data-use="video">
+      <div class="popContentContainer">
+        <div class="js-player Player js-selectChangePlayer" data-ply-type="video" data-ply-idx="2" data-ply-controls="play, pause, stop, progress, zoom" data-ply-opts="speed, again" data-speed-btn="0.8,1.0,1.2,1.5" data-ply-mode="basic" data-script-mode="bg">
+          <video data-name="ON" class="js-media" playsinline="" preload="none">
+            <source src="media/mp4/l{lesson}_read_script.mp4" type="video/mp4">
+            <track kind="captions" src="media/mp4/l{lesson}_read.vtt" srclang="en" label="English">
+          </video>
+          <video data-name="OFF" class="js-media" playsinline="" preload="none">
+            <source src="media/mp4/l{lesson}_read.mp4" type="video/mp4">
+            <track kind="captions" src="media/mp4/l{lesson}_read.vtt" srclang="en" label="English">
+          </video>
+        </div>
+
+        <button class="js-closePopBtn closePopBtn"></button>
+      </div>
+    </div>
+
+    <!-- 본문 전체 듣기 팝업 -->
+    <div class="js-popupContent popup Iframe" data-pop-idx="2">
+      <iframe src="popup/{allpop}.html" frameborder="0"></iframe>
+      <button class="js-closePopBtn closePopBtn"></button>
+    </div>
+
+    <!-- 해석 팝업 -->
+    <div class="js-popupContent popup Iframe" data-pop-idx="3">
+      <iframe src="popup/{page}_kor1.html" frameborder="0"></iframe>
+      <button class="js-closePopBtn closePopBtn"></button>
+    </div>
+
+{dicpop}{extrapop}
+    <!-- 구문 해설 -->
+    <comp-syntax></comp-syntax>
+
+    <!-- 미니 단어장 -->
+    <comp-mini-word></comp-mini-word>
+
+{quizpop}
+    <!-- 하단 버튼 -->
+    <div class="botEleBox">
+      <!-- main -->
+      <div class="js-btnHandler btnHandlerBox selected" data-include="player" data-cont-type="main">
+        <div class="btnBundle">
+          <div class="js-controlBox controlsBox">
+            <div class="js-controlBoxContainer mediaControl" data-ply-type="language" data-ply-idx="1"></div>
+          </div>
+
+          <button class="js-repeatTalk repeatReadBtn"></button>
+          <button class="js-openPopBtn korBtn" data-pop-idx="3"></button>{dicbtn}
+          <button class="js-readHideBtn readHideBtn" data-ply-idx="1"></button>
+        </div>
+      </div>
+
+      <!-- popup -->
+      <div class="js-btnHandler btnHandlerBox" data-include="player" data-cont-type="popup" data-pop-idx="1">
+        <div class="btnBundle">
+          <div class="controlsBox">
+            <div class="js-controlBoxContainer mediaControl" data-ply-type="video" data-ply-idx="2"></div>
+          </div>
+
+          <button class="js-repeatTalk repeatReadBtn"></button>
+        </div>
+      </div>
+
+{bothdl}
+    </div>
+  </div>
+  <script src="include/contentsUI/js/config.js"></script>
+  <script src="include/contentsUI/js/index.js"></script>
+  <script src="include/contentsUI/js/contentUI.js"></script>
+  <script src="include/js/config.js"></script>
+  <script src="include/js/pageManager.js"></script>
+  <script src="include/js/components.js"></script>
+  <script src="include/js/common.js"></script>
+  <script src="include/js/reading.js"></script>
+  <script src="js/{page}.js"></script>
+</body>
+</html>'''
+
+
+def quiz_input(q, popidx):
+    return '''    <!-- readingQuiz 팝업 -->
+    <div class="js-popupContent popup" data-pop-idx="%d" data-use="readingQuiz" data-pop-opts="noClose">
+      <div class="popContentContainer">
+        <!-- popHeader -->
+        <header class="popHeader">
+          <div class="popHeaderInner">
+            <strong class="popHeaderTit"></strong>
+          </div>
+          <button class="js-closePopBtn closePopBtn"></button>
+        </header>
+
+        <!-- popContent -->
+        <div class="popContent">
+          <!-- quizBox -->
+          <div class="js-quizContainer quizBox arrayV" data-quiz-type="input" data-quiz-opts="noAlert, noSound, noSolve, noRemoveSpace, noReset">
+            <!-- quizList -->
+            <div class="quizTitBox">
+              <span class="marker read">%s</span>
+              <div class="listTxt readingQuestion" data-include="interpretText">
+                <p class="js-narrationBtn narrText" data-narr-idx="1" data-narr-src="media/mp3/%s.mp3">%s</p>
+                <span class="js-interpretTarget interpretText" data-interpret-idx="1">%s</span>
+              </div>
+            </div>
+            <div class="readingAnswer">
+              <div class="js-quizInputBox inputBox writingBox Br">
+                <textarea rows="3" class="js-quizItem quizInput pen" placeholder=" " data-answer=" "></textarea>
+                <!-- quizTarget -->
+                <div class="js-quizTarget quizTarget Answer">
+                  <span class="js-narrationBtn narrText" data-narr-idx="2" data-narr-src="media/mp3/%s.mp3" data-include="interpretText">%s
+                    <span class="js-interpretTarget interpretText" data-interpret-idx="1">%s</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+''' % (popidx, q['label'], q['qsrc'], q['q'], q['qkr'], q['asrc'], q['a'], q['akr'])
+
+
+
+def quiz_input2(q, popidx):
+    """입력형 질문이 둘 이상인 쪽 — 슬라이더로 넘긴다 (2단원 p033_01 원본과 같은 꼴)"""
+    ONE = '''              <!-- sld {k} -->
+              <li class="js-sliderContent sliderContent js-quizContainer" data-quiz-type="input" data-quiz-opts="noAlert, noSound, noSolve, noRemoveSpace, noReset" data-sld-cont="{k}">
+                <!-- quizList -->
+                <div class="quizTitBox">
+                  <span class="marker read">{label}</span>
+                  <div class="listTxt readingQuestion" data-include="interpretText">
+                    <p class="js-narrationBtn narrText" data-narr-idx="1" data-narr-src="media/mp3/{qsrc}.mp3">{q}</p>
+                    <span class="js-interpretTarget interpretText" data-interpret-idx="{k}">{qkr}</span>
+                  </div>
+                </div>
+                <div class="readingAnswer">
+                  <div class="js-quizInputBox inputBox writingBox Br">
+                    <textarea rows="3" class="js-quizItem quizInput pen" placeholder=" " data-answer=" "></textarea>
+                    <!-- quizTarget -->
+                    <div class="js-quizTarget quizTarget Answer">
+                      <span class="js-narrationBtn narrText" data-narr-idx="2" data-narr-src="media/mp3/{asrc}.mp3" data-include="interpretText">{a}
+                        <span class="js-interpretTarget interpretText" data-interpret-idx="{k}">{akr}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </li>'''
+    li = [ONE.format(k=k, **it) for k, it in enumerate(q['items'], 1)]
+    return '''    <!-- readingQuiz 팝업 -->
+    <div class="js-popupContent popup" data-pop-idx="{idx}" data-use="readingQuiz" data-pop-opts="noClose">
+      <div class="popContentContainer">
+        <!-- popHeader -->
+        <header class="popHeader">
+          <div class="popHeaderInner">
+            <strong class="popHeaderTit"></strong>
+          </div>
+          <button class="js-closePopBtn closePopBtn"></button>
+        </header>
+
+        <!-- popContent -->
+        <div class="popContent quizBox">
+          <div class="js-slider Slider" data-sld-idx="1">
+            <ul class="sliderContainer">
+{items}
+            </ul>
+            <div class="sliderBtnBox">
+              <button class="js-sliderPrevBtn sliderPrevButton off"></button>
+              <div class="js-sliderTabs sliderTabs"></div>
+              <button class="js-sliderNextBtn sliderNextButton"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+'''.format(idx=popidx, items='\n'.join(li))
+
+
+def quiz_tf(q, popidx):
+    body = []
+    cid = 1
+    for i, it in enumerate(q['items']):
+        body.append('''            <!-- quizTitBox -->
+            <div class="quizTitBox">
+              <span class="marker read">%s</span>
+              <div class="readingQuestion" data-include="interpretText">
+                <p class="js-narrationBtn narrText" data-narr-idx="3" data-narr-src="media/mp3/%s.mp3">%s</p>
+                <span class="js-interpretTarget interpretText" data-interpret-idx="1">%s</span>
+              </div>
+
+              <!-- quizItem -->
+              <div class="js-quizItem quizItem arrayH" data-answer="%s">
+                <!-- true -->
+                <div class="Choice">
+                  <input type="checkbox" id="quiz1_check%d">
+                  <label for="quiz1_check%d" class="js-choiceItem choiceItem">
+                    <strong>T</strong>
+                  </label>
+                </div>
+                <!-- false -->
+                <div class="Choice">
+                  <input type="checkbox" id="quiz1_check%d">
+                  <label for="quiz1_check%d" class="js-choiceItem choiceItem">
+                    <strong>F</strong>
+                  </label>
+                </div>
+                <button class="js-quizHandlerItemBtn itemBtn answer Circle" data-item-index="%d" data-handler="0"></button>
+              </div>
+            </div>''' % (q['label'][i], it['src'], it['q'], it['qkr'], it['ans'], cid, cid, cid + 1, cid + 1, i))
+        cid += 2
+    return '''    <!-- readingQuiz 팝업 -->
+    <div class="js-popupContent popup" data-pop-idx="%d" data-use="readingQuiz" data-pop-opts="noClose">
+      <div class="popContentContainer">
+        <!-- popHeader -->
+        <header class="popHeader">
+          <div class="popHeaderInner">
+            <strong class="popHeaderTit"></strong>
+          </div>
+          <button class="js-closePopBtn closePopBtn"></button>
+        </header>
+
+        <!-- popContent -->
+        <div class="popContent">
+          <!-- quizBox -->
+          <div class="js-quizContainer quizBox arrayV" data-quiz-type="choice" data-quiz-name="trueFalse" data-quiz-opts="noAlert, noSound, noSolve, noRemoveSpace, toggleChoice, noReset">
+%s
+          </div>
+        </div>
+      </div>
+    </div>
+''' % (popidx, '\n'.join(body))
+
+
+def make_page(page, scrolls):
+    p = PAGES[page]
+    has_think = bool(p.get('think'))
+    has_mission = bool(p.get('mission'))
+    # 리딩퀴즈 팝업 번호: 마지막 쪽만 9, 나머지는 7 (3단원 원본 확인)
+    #   p050_02=7  p051_01=7  p052_01=7(+thinkabout 8)  p053_01=9(+missionclear 10)
+    popidx = 9 if page == ORDER[-1] else 7
+    # 리딩 퀴즈가 없는 단원도 있다(Special Lesson). 그러면 질문 단추도 퀴즈 팝업도 없다.
+    has_quiz = bool((p.get('quiz') or {}).get('kind'))
+    # 하단 버튼 박스
+    bot = ['            <div class="readingBtnBox Bot direcR">',
+           '              <div class="btnBox">']
+    if has_quiz:
+        bot += ['                <button class="js-openPopBtn questionBtn" data-pop-idx="%d">' % popidx,
+                '                  <span>%s</span>' % p['qbtn'],
+                '                </button>']
+    if has_mission:
+        bot.append('                <button class="js-openPopBtn missionClearBtn" data-pop-idx="10"></button>')
+    bot.append('              </div>')
+    if has_think:
+        bot.append('              <div class="btnBox">')
+        bot.append('                <button class="js-openPopBtn thinkAboutBtn" data-pop-idx="8"></button>')
+        bot.append('              </div>')
+    bot.append('            </div>')
+
+    extrapop = ''
+    qk = (p.get('quiz') or {}).get('kind')
+    quizpop = ''
+    bothdl = ''
+    if has_quiz:
+        quizpop = (quiz_input(p['quiz'], popidx) if qk == 'input'
+                   else quiz_input2(p['quiz'], popidx) if qk == 'input2'
+                   else quiz_tf(p['quiz'], popidx))
+
+        bothdl = '''      <!-- popup -->
+      <div class="js-btnHandler btnHandlerBox" data-cont-type="popup" data-pop-idx="%d">
+        <div class="btnBundle">
+          <comp-btn-group hdlQuiz="0"></comp-btn-group>
+          <button class="js-sndEffect js-interpretItem korBtn" data-snd="click" data-interpret-idx="1"%s></button>
+        </div>
+      </div>''' % (popidx, ' data-disabled="true" data-hdl-idx="0"' if qk in ('input', 'input2') else '')
+
+    if has_think:
+        th = p['think']
+        extrapop = '''
+    <!-- thinkabout 예시 답안 팝업 -->
+    <div class="js-popupContent popup Iframe" data-pop-idx="11">
+      <iframe src="popup/%s_think_ans1.html" frameborder="0"></iframe>
+      <button class="js-closePopBtn closePopBtn"></button>
+    </div>
+''' % page
+        quizpop += '''
+    <!-- thinkabout 팝업 -->
+    <div class="js-popupContent popup" data-pop-idx="8" data-use="thinkabout" data-pop-inner="11">
+      <div class="popContentContainer">
+        <!-- popHeader -->
+        <header class="popHeader">
+          <div class="popHeaderInner">
+            <strong class="js-narrationBtn narrText popHeaderTit" data-narr-idx="3" data-narr-src="include/media/common/think_about_this.mp3"></strong>
+          </div>
+          <button class="js-closePopBtn closePopBtn"></button>
+        </header>
+
+        <!-- popContent -->
+        <div class="popContent">
+          <!-- Header -->
+          <header class="Header">
+            <div class="headerInner Main arrayH">
+              <div class="headerText" data-include="interpretText">
+                <p class="js-narrationBtn narrText" data-narr-idx="4" data-narr-src="media/mp3/%s.mp3">
+                  %s
+                </p>
+                <span class="js-interpretTarget interpretText" data-interpret-idx="2">%s</span>
+              </div>
+            </div>
+          </header>
+
+          <div class="writingBox Gr">
+            <textarea class="pen" placeholder=" " rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+''' % (th['src'], th['q'], th['qkr'])
+        bothdl += '''
+
+      <!-- popup -->
+      <div class="js-btnHandler btnHandlerBox" data-cont-type="popup" data-pop-idx="8">
+        <div class="btnBundle">
+          <button class="js-sndEffect js-interpretItem korBtn" data-snd="click" data-interpret-idx="2"></button>
+          <button class="js-openPopBtn exAnswerBtn" data-pop-idx="11"></button>
+        </div>
+      </div>'''
+
+    if has_mission:
+        quizpop += '''
+    <!-- missionclear 팝업 -->
+    <div class="js-popupContent popup" data-pop-idx="10" data-use="missionclear">
+      <div class="popContentContainer">
+        <!-- popHeader -->
+        <header class="popHeader">
+          <div class="popHeaderInner">
+            <strong class="js-narrationBtn narrText popHeaderTit" data-narr-idx="7" data-narr-src="include/media/common/mission_clear.mp3"></strong>
+          </div>
+          <button class="js-closePopBtn closePopBtn"></button>
+        </header>
+
+        <!-- popContent -->
+        <div class="popContent">
+          <div class="selfCheckBox">
+            <div class="checkList">
+              <div class="listTxt">
+                <comp-translate kr="%s" en="%s" src="media/mp3/%s.mp3" narrIdx="3" clickIdx="1"></comp-translate>
+              </div>
+            </div>
+            <comp-self-check id="01,02,03" name="check01"></comp-self-check>
+          </div>
+        </div>
+      </div>
+    </div>
+''' % (p['mission']['kr'], p['mission']['en'], p['mission']['src'])
+
+    dic = has_dictation()
+    dicpop = ('''    <!-- dictation 팝업 -->
+    <div class="js-popupContent popup Iframe" data-pop-idx="4">
+      <iframe src="popup/%s_dic1.html" frameborder="0"></iframe>
+      <button class="js-closePopBtn closePopBtn"></button>
+    </div>
+''' % page) if dic else ''
+    dicbtn = ('\n          <button class="js-openPopBtn dictationBtn" data-pop-idx="4"></button>'
+              if dic else '')
+    return HEAD.format(lesson=LESSON, page=page, body=body_html(page, scrolls), botbtn='\n'.join(bot),
+                       extrapop=extrapop, quizpop=quizpop, bothdl=bothdl, allpop=all_popup(),
+                       dicpop=dicpop, dicbtn=dicbtn)
+
+
+# ---------- js ----------
+def make_js(page, words, syn):
+    p = PAGES[page]
+    n = p['num']
+    L = ['// 미니 단어장 data-use="word"', 'var wordData = [']
+    for i, w in enumerate(words, 1):
+        word, mean, ex, exko = w[0], w[1], w[2], w[3]
+        marked = w[6] if len(w) > 6 else ''
+        pairs = split_mean(mean)
+        exb, ok = bold_word(ex, word, marked)
+        L.append('  {')
+        L.append('    index: %d,' % i)
+        L.append('    wordArr: "%s",' % word)
+        L.append('    wordMp3Arr: "media/mp3/3_%s_word_%02d.mp3",' % (n, i))
+        L.append('    wordClassArr: "%s",' % pairs[0][0])
+        L.append('    wordMeanArr: "%s",' % pairs[0][1])
+        L.append('    wordExEgArr: "%s",' % exb.replace('"', '\\"'))
+        L.append('    wordExMp3Arr: "media/mp3/%s.mp3",' % ex_mp3(word))
+        L.append('    wordExKoArr: "%s"%s' % (exko.replace('"', '\\"'), ',' if len(pairs) > 1 else ''))
+        if len(pairs) > 1:
+            L.append('')
+            L.append('    wordClassArr2: "%s",' % pairs[1][0])
+            L.append('    wordMeanArr2: "%s"' % pairs[1][1])
+        if not ok:
+            print('  [경고] 예문에서 표제어 못 찾음:', page, word, '|', ex)
+        L.append('  },')
+    L.append(']')
+    L.append('')
+    L.append('// 구문 해설 data-use="syntax"')
+    L.append('var syntaxData = [')
+    # 구문 문장 -> 본문 mp3 찾기
+    sent2src = {}
+    for kind, blk in p['blocks']:
+        if kind in ('subtit', 'label'):
+            continue
+        for idx, en, kr in blk:
+            plain = re.sub(r'\|\d+\|', '', en)
+            plain = re.sub(r'\[mark:\d+:\s*([^\]]*)\]', r'\1', plain)
+            sent2src[norm(plain)] = '3_%s_read_%s' % (n, idx)
+    for i, (sent, cmt) in enumerate(syn, 1):
+        src = sent2src.get(norm(sent))
+        if not src:                      # 한 문장이 여러 take 로 나뉜 경우 앞부분으로 찾는다
+            key = norm(sent)
+            for k2, v2 in sent2src.items():
+                if k2 and (key.startswith(k2) or k2.startswith(key[:30])):
+                    src = v2
+                    break
+        if not src:
+            cand = [k for k in sent2src if norm(sent)[:40] in k]
+            src = sent2src[cand[0]] if cand else 'XXX'
+            if src == 'XXX':
+                print('  [경고] 구문 문장 매칭 실패:', page, sent[:60])
+        cmt = cmt.replace('「', "<span class='cursiveB'>「</span>").replace('」', "<span class='cursiveB'>」</span>")
+        L.append('  {')
+        L.append('    index: %d,' % i)
+        L.append('    syntaxArr: "%s",' % sent.replace('"', '\\"'))
+        L.append('    syntaxMp3Arr: "media/mp3/%s.mp3",' % src)
+        L.append('    syntaxCmtArr: "%s",' % cmt.replace('"', '\\"'))
+        L.append('  },')
+    L.append(']')
+    return '\n'.join(L)
+
+
+def norm(s):
+    return re.sub(r'[^a-z0-9]', '', s.lower().replace('’', "'"))
+
+
+def write(path, text):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'wb') as f:
+        f.write(text.replace('\r\n', '\n').replace('\n', '\r\n').encode('utf-8'))
+
+
+# ---------- css ----------
+
+# ※ 문단 위치·여백 수치는 배경 이미지를 보고 잡은 1차 추정치. 실기 확인 후 조정 필요.
+
+
+def make_css(page):
+    img = IMG.get(page) or {}
+    p = PAGES[page]
+    L = ['@charset "utf-8";',
+         '.readingCont {',
+         '\twidth: 100%;']
+    if 'bg' in img:
+        L.append('\theight: calc(%dpx/2);' % img['bg'][1])
+    L += ['\tpadding-top: 70px;',
+         '\tbackground: url(../images/%s/read_bg.png) top center / 100%% no-repeat;' % page,
+         '}',
+         '']
+    # 제목 / 소제목
+    tits = [(p['title']['cls'].split()[-1], p['title'])] if p['title'] else []
+    for kind, blk in p['blocks']:
+        if kind == 'subtit':
+            tits.append((blk['cls'].split()[-1], blk))
+    keymap = {'mainTitle': 'title'}
+    fname = {'mainTitle': 'title'}
+    for _i in range(1, 9):
+        keymap['sTit%02d' % _i] = 's%d' % _i
+        fname['sTit%02d' % _i] = 's_title%02d' % _i
+    for cls, t in tits:
+        wh = img.get(keymap[cls])
+        base = fname[cls]
+        sel = '.mainTitle' if cls == 'mainTitle' else '.subTitle.%s' % cls
+        if cls != 'mainTitle':
+            L.append('.readingCont .subTitle { display: block; cursor: pointer; }')
+        L.append('%s {' % sel)
+        if wh:
+            L.append('\twidth: calc(%dpx/2);' % wh[0])
+            L.append('\theight: calc(%dpx/2);' % wh[1])
+        L.append('\tmargin: %s;' % ('0 auto 50px' if cls == 'mainTitle' else '0 0 20px'))
+        L.append('\tbackground: url(../images/%s/%s.png) top %s / 100%% no-repeat;'
+                 % (page, base, 'center' if cls == 'mainTitle' else 'left'))
+        L.append('}')
+        L.append('%s.on { background-image: url(../images/%s/%s_h.png); }' % (sel, page, base))
+        L.append('.isPlayAgaing %s.on { background-image: url(../images/%s/%s_b.png); }' % (sel, page, base))
+        L.append('')
+    # 제목/소제목 이미지 위 단어 버튼 (렌더링 보고 잡은 값)
+    marks = re.findall(r'\[mark:(\d+):', p['title']['mark'] if p['title'] else '')
+    for k, m in enumerate(marks):
+        bl, bt = WORDBTN[page][k]
+        L.append('button[data-word="%s"] { top: %dpx; left: %dpx; }' % (m, bt, bl))
+    if marks:
+        L.append('')
+    L.append(CSS_LAYOUT[page].strip())
+    L.append('')
+    L.append('/* 리딩퀴즈 */')
+    if (p.get('quiz') or {}).get('kind') in ('input', 'input2'):
+        L.append('.popup[data-use="readingQuiz"] .readingAnswer .inputBox { width: 100%;}')
+    return '\n'.join(L)
+
+
+# ---------- kor1 / _all 팝업 ----------
+def sc(src, en, kr, scroll='', rel='../media/mp3/'):
+    a = ''
+    if scroll:
+        a += ' scrollTop="%s"' % scroll
+    return '<script-cont%s src="%s%s.mp3" en="%s" kr="%s"></script-cont>' % (a, rel, src, en, kr)
+
+
+def plain(en):
+    s = re.sub(r'\|\d+\|', '', en)
+    s = re.sub(r'\[mark:\d+:\s*([^\]]*)\]', r'\1', s)
+    return re.sub(r'<br>', ' ', s).strip()
+
+
+def script_boxes(page, indent='\t\t\t\t', pscroll=None):
+    """kor1 / _all 공용 — (줄 리스트, script-cont 개수)
+    kr 은 krlayout.KR 의 줄 배치 값을 쓴다 (없으면 원문 그대로)."""
+    p = PAGES[page]
+    n = p['num']
+    kl = KRLAYOUT.get(page)
+    ps = pscroll or {}
+    L, cnt = [], 0
+
+    def kr_of(i, fallback):
+        return kl[i] if kl and i < len(kl) else fallback
+
+    t = p['title']
+    if t:
+        cls = 'titBox' if t['cls'] == 'mainTitle' else 'subTitBox'
+        L.append('%s<!-- %s -->' % (indent, cls))
+        L.append('%s<comp-script-box class="%s">' % (indent, cls))
+        L.append('%s\t%s' % (indent, sc(t['src'], t['en'], kr_of(cnt, t['kr']), ps.get(t['src'], ''))))
+        L.append('%s</comp-script-box>' % indent)
+        cnt += 1
+    for kind, blk in p['blocks']:
+        if kind == 'label':
+            L.append('%s<!-- scriptBox -->' % indent)
+            L.append('%s<comp-script-box>' % indent)
+            L.append('%s\t%s' % (indent, sc(blk['src'], blk['en'], kr_of(cnt, blk['kr']), ps.get(blk['src'], ''))))
+            L.append('%s</comp-script-box>' % indent)
+            cnt += 1
+            continue
+        if kind == 'subtit':
+            L.append('%s<!-- subTitBox -->' % indent)
+            L.append('%s<comp-script-box class="subTitBox">' % indent)
+            L.append('%s\t%s' % (indent, sc(blk['src'], blk['en'], kr_of(cnt, blk['kr']), ps.get(blk['src'], ''))))
+            L.append('%s</comp-script-box>' % indent)
+            cnt += 1
+            continue
+        L.append('%s<!-- scriptBox -->' % indent)
+        L.append('%s<comp-script-box>' % indent)
+        for idx, en, kr in blk:
+            L.append('%s\t%s' % (indent, sc('3_%s_read_%s' % (n, idx), plain(en), kr_of(cnt, kr), ps.get('3_%s_read_%s' % (n, idx), ''))))
+            cnt += 1
+        L.append('%s</comp-script-box>' % indent)
+    return L, cnt
+
+
+KOR1 = '''<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <link rel="stylesheet" href="../include/contentsUI/css/index.css">
+  <link rel="stylesheet" type="text/css" href="../include/css/common.css">
+
+  <title>{page}_kor1</title>
+  <style>
+    /* 인덴트 */
+    .scriptContainer .scriptBox:not(.titBox, .subTitBox, .list) .Script:first-of-type {{margin-left: 20px;}}
+  </style>
+</head>
+<body>
+  <div class="js-scale iframePopup" data-use="kor">
+    <div class="popContentContainer">
+      <!-- popHeader -->
+      <header class="popHeader">
+        <div class="popHeaderInner">
+          <h2 class="popHeaderTit">
+            <span>해석</span>
+          </h2>
+        </div>
+        <button class="js-closePopBtn closePopBtn"></button>
+      </header>
+      <!-- popContentBox -->
+      <div class="popContentBox">
+        <!-- popContent -->
+        <div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="1">
+          <div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-idx="1" data-scroll-idx="1">
+            <!-- scriptContainer -->
+            <div class="js-languageContainer scriptContainer" data-ply-idx="1">
+              <!-- Paragraph -->
+              <div class="Paragraph">
+{boxes}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../include/js/config.js"></script>
+  <script src="../include/js/pageManager.js"></script>
+  <script src="../include/js/components.js"></script>
+  <script src="../include/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {{
+      console.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+    }});
+  </script>
+</body>
+</html>'''
+
+
+def make_kor1(page):
+    boxes, _ = script_boxes(page, '\t\t\t\t', POPKOR1.get(page))
+    return KOR1.format(page=page, boxes='\n'.join(boxes))
+
+
+ALL_HEAD = '''<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+\t<meta charset="UTF-8">
+\t<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+\t<link rel="stylesheet" href="../include/contentsUI/css/index.css">
+\t<link rel="stylesheet" type="text/css" href="../include/css/common.css">
+\t<link rel="stylesheet" type="text/css" href="../include/css/listen_total.css">
+\t<title>{title}</title>
+\t<style>
+\t\t.scriptContainer .scriptBox:not(.titBox, .subTitBox) .Script:first-of-type {{
+\t\t\tmargin-left: 20px;
+\t\t}}
+\t</style>
+</head>
+
+<body>
+\t<div class="js-iframePopupContainer js-scale iframePopup" data-use="listenTotal">
+\t\t<div class="popContentContainer">
+\t\t\t<!-- popHeader -->
+\t\t\t<header class="popHeader">
+\t\t\t\t<div class="popHeaderInner">
+\t\t\t\t\t<h2 class="popHeaderTit">
+\t\t\t\t\t\t<span>본문 전체 듣기</span>
+\t\t\t\t\t</h2>
+
+\t\t\t\t\t<div class="btnBundle readAloudBox">
+\t\t\t\t\t\t<div class="readAloudTimer">
+\t\t\t\t\t\t\t<div class="js-toggleBtn timerBtnBox">
+\t\t\t\t\t\t\t\t<button class="js-timeStart timeStartBtn"></button>
+\t\t\t\t\t\t\t\t<button class="js-timeEnd timeEndBtn"></button>
+\t\t\t\t\t\t\t</div>
+
+\t\t\t\t\t\t\t<div class="timeBox js-timeBox">
+\t\t\t\t\t\t\t\t<span class="js-minute Min">00</span>
+\t\t\t\t\t\t\t\t<span class="Dot">:</span>
+\t\t\t\t\t\t\t\t<span class="js-second Sec">00</span>
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t</div>
+
+\t\t\t\t\t\t<!-- readAloud -->
+\t\t\t\t\t\t<div class="readAloudBtnBox">
+\t\t\t\t\t\t\t<button class="js-openPopBtn openPopBtn readAloudBtn" data-pop-idx="10"></button>
+\t\t\t\t\t\t\t<div class="js-popupContent miniPopup" data-pop-idx="10" data-use="readaloud">
+\t\t\t\t\t\t\t\t<div class="miniContent arrayV">
+\t\t\t\t\t\t\t\t\t<div class="js-timeCheck timeCheck" data-order="1">
+\t\t\t\t\t\t\t\t\t\t1st <span class="js-minute Min"></span> min. <span class="js-second Sec"></span> sec.
+\t\t\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t\t\t<div class="js-timeCheck timeCheck" data-order="2">
+\t\t\t\t\t\t\t\t\t\t2nd <span class="js-minute Min"></span> min. <span class="js-second Sec"></span> sec.
+\t\t\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t\t\t<p><span class="timeStartIcon"></span>버튼을 눌러 타이머를<br>시작/종료할 수 있습니다.</p>
+\t\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t</div>
+\t\t\t\t\t</div>
+\t\t\t\t</div>
+\t\t\t\t<button class="js-closePopBtn closePopBtn"></button>
+\t\t\t</header>
+
+\t\t\t<!-- popContentBox -->
+\t\t\t<div class="popContentBox">
+\t\t\t\t<!-- popContent -->
+\t\t\t\t<div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="0">
+\t\t\t\t\t<div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-controls="play, pause, stop, progress" data-ply-opts="speed" data-speed-btn="0.8,1.0,1.2,1.5" data-script-mode="toggle" data-ply-idx="2" data-scroll-idx="0">
+\t\t\t\t\t\t<!-- scriptContainer -->
+\t\t\t\t\t\t<div class="js-languageContainer scriptContainer" data-ply-idx="2">
+\t\t\t\t\t\t\t<!-- Paragraph -->
+\t\t\t\t\t\t\t<div class="Paragraph">
+{boxes}
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t</div>
+\t\t\t\t\t</div>
+\t\t\t\t</div>
+
+\t\t\t\t<!-- btnHandlerBox -->
+\t\t\t\t<div class="btnHandlerBox selected" data-include="player">
+\t\t\t\t\t<div class="btnBundle">
+\t\t\t\t\t\t<div class="js-controlBox controlsBox" data-disabled="false">
+\t\t\t\t\t\t\t<div class="js-controlBoxContainer mediaControl" data-ply-type="language" data-ply-idx="2"></div>
+\t\t\t\t\t\t</div>
+
+\t\t\t\t\t\t<div class="scrollMoveBtnBox">
+{movebtn}
+\t\t\t\t\t\t</div>
+\t\t\t\t\t</div>
+
+\t\t\t\t\t<div class="btnBundle">
+\t\t\t\t\t\t<button class="js-korScriptBtn korScriptBtn" data-ply-idx="2"></button>
+\t\t\t\t\t</div>
+\t\t\t\t</div>
+\t\t\t</div>
+\t\t</div>
+
+\t\t<!-- 알럿창 -->
+\t\t<div class="resetAlert js-resetAlert">
+\t\t\t<div class="resetBox">
+\t\t\t\t<p>리셋하고 기록하세요.</p>
+\t\t\t\t<button class="js-timeReset timeResetBtn"></button>
+\t\t\t</div>
+\t\t</div>
+\t</div>
+\t<script src="../include/js/config.js"></script>
+\t<script src="../include/js/pageManager.js"></script>
+\t<script src="../include/js/components.js"></script>
+\t<script src="../include/js/common.js"></script>
+\t<script src="../include/js/listenTotal.js"></script>
+\t<script>
+\t\tdocument.addEventListener("DOMContentLoaded", () => {{
+\t\t\tconsole.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+\t\t}});
+\t</script>
+</body>
+
+</html>'''
+
+
+def make_all():
+    boxes, starts, cnt = [], [], 0
+    for page in ORDER:
+        starts.append(cnt)
+        b, c = script_boxes(page, '\t\t\t\t', POPALL)
+        boxes += b
+        cnt += c
+    last = cnt - 1
+    lastnum = PAGES[ORDER[-1]]['num']
+    labels = ['전체'] + ['%s~%s쪽' % (PAGES[p]['num'], lastnum) for p in ORDER[1:-1]] + ['%s쪽' % lastnum]
+    idxs = [0] + starts[1:]
+    mb = []
+    for i, (lab, st) in enumerate(zip(labels, idxs)):
+        mb.append('\t\t\t\t\t\t\t<button class="js-scrollMoveBtn scrollMoveBtn%s" data-script-idx="%d,%d">'
+                  % (' ON' if i == 0 else '', st, last))
+        mb.append('\t\t\t\t\t\t\t\t<span>%s</span>' % lab)
+        mb.append('\t\t\t\t\t\t\t</button>')
+    return ALL_HEAD.format(boxes='\n'.join(boxes), movebtn='\n'.join(mb), title=all_popup()), cnt
+
+
+THINK_ANS = '''<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <link rel="stylesheet" href="../include/contentsUI/css/index.css">
+  <link rel="stylesheet" type="text/css" href="../include/css/common.css">
+
+  <title>{page}_think_ans1</title>
+</head>
+<body>
+  <div class="js-iframePopupContainer js-scale iframePopup" data-use="exanswer">
+    <div class="popContentContainer">
+      <!-- popHeader -->
+      <header class="popHeader">
+        <div class="popHeaderInner">
+          <h2 class="popHeaderTit">
+            <span>예시 답안</span>
+          </h2>
+
+          <div class="controlsBox" data-style="default">
+            <div class="js-controlBoxContainer mediaControl" data-ply-type="language" data-ply-idx="2"></div>
+            <button class="js-korScriptBtn korScriptBtn" data-ply-idx="2"></button>
+          </div>
+        </div>
+        <button class="js-closePopBtn closePopBtn"></button>
+      </header>
+
+      <!-- popContentBox -->
+      <div class="popContentBox">
+        <!-- popContent -->
+        <div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="0">
+          <div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-controls="play, pause, stop" data-script-mode="toggle" data-ply-idx="2" data-scroll-idx="0">
+            <!-- scriptContainer -->
+            <div class="js-languageContainer scriptContainer" data-ply-idx="2">
+              <!-- Paragraph -->
+              <div class="Paragraph">
+
+\t\t\t\t\t\t\t\t<comp-script-box speaker=" " dot>
+{conts}
+\t\t\t\t\t\t\t\t</comp-script-box>
+
+\t\t\t\t\t\t\t</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../include/js/config.js"></script>
+  <script src="../include/js/pageManager.js"></script>
+  <script src="../include/js/components.js"></script>
+  <script src="../include/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {{
+      console.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+    }});
+  </script>
+</body>
+</html>'''
+
+
+def make_think_ans(page):
+    th = PAGES[page]['think']
+    conts = ['\t\t\t\t\t\t\t\t\t' + sc(s, en, kr) for s, en, kr in th['ex']]
+    return THINK_ANS.format(page=page, conts='\n'.join(conts))
+
+
+
+
+def intro_page():
+    """Read Smart 도입 페이지 이름 (첫 본문 쪽의 _01).
+
+    들머리 쪽이 없는 단원(Special Lesson)에서는 None — 그 쪽을 만들지 않는다.
+    """
+    if not READSMART:
+        return None
+    return ORDER[0][:4] + '_01'
+
+
+def all_popup():
+    return ORDER[0] + '_all'
+
+
+def think_page():
+    for p in ORDER:
+        if PAGES[p].get('think'):
+            return p
+    return None
+
+
+def build(lesson=None, out=None, only=None):
+    """only 를 주면 그 쪽만 쓴다. 안 주면 예전 그대로 단원 전체.
+
+    단원 공통 파일(들머리 쪽 · 전체듣기 팝업 · 예시답안)은 단원 전체 자료에서
+    나오므로 only 와 상관없이 늘 쓴다.
+    """
+    if lesson is not None:
+        load_lesson(lesson, out)
+    want = set(only) if only else None
+    wg = load_words()
+    sy = load_syntax()
+    _intro = intro_page()
+    if _intro:
+        write('%s/%s.html' % (OUT, _intro), READSMART)
+    for page in ORDER:
+        if want and page not in want:
+            continue
+        words = wg[WORDPAGE[page]] if page in WORDPAGE else []
+        syn = sy[PAGES[page]['num']]
+        write('%s/%s.html' % (OUT, page), make_page(page, SCROLLS.get(page, {})))
+        write('%s/css/%s.css' % (OUT, page), make_css(page))
+        write('%s/js/%s.js' % (OUT, page), make_js(page, words, syn))
+        write('%s/popup/%s_kor1.html' % (OUT, page), make_kor1(page))
+        print('  %s  단어 %d  구문 %d' % (page, len(words), len(syn)))
+    tp = think_page()
+    if tp:
+        write('%s/popup/%s_think_ans1.html' % (OUT, tp), make_think_ans(tp))
+    allhtml, cnt = make_all()
+    write('%s/popup/%s.html' % (OUT, all_popup()), allhtml)
+    print('  _all script-cont %d개 (마지막 인덱스 %d)' % (cnt, cnt - 1))
+    return cnt
+
+
+if __name__ == '__main__':
+    n = int(sys.argv[1]) if len(sys.argv) > 1 else 6
+    out = None
+    if '--out' in sys.argv:
+        out = sys.argv[sys.argv.index('--out') + 1]
+    print('[build] lesson%02d' % n)
+    build(n, out)
+    print('[build] ->', OUT)

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <link rel="stylesheet" href="../include/contentsUI/css/index.css">
+  <link rel="stylesheet" type="text/css" href="../include/css/common.css">
+
+  <title>p122_02_kor1</title>
+  <style>
+    /* 인덴트 */
+    .scriptContainer .scriptBox:not(.titBox, .subTitBox, .list) .Script:first-of-type {margin-left: 20px;}
+  </style>
+</head>
+<body>
+  <div class="js-scale iframePopup" data-use="kor">
+    <div class="popContentContainer">
+      <!-- popHeader -->
+      <header class="popHeader">
+        <div class="popHeaderInner">
+          <h2 class="popHeaderTit">
+            <span>해석</span>
+          </h2>
+        </div>
+        <button class="js-closePopBtn closePopBtn"></button>
+      </header>
+      <!-- popContentBox -->
+      <div class="popContentBox">
+        <!-- popContent -->
+        <div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="1">
+          <div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-idx="1" data-scroll-idx="1">
+            <!-- scriptContainer -->
+            <div class="js-languageContainer scriptContainer" data-ply-idx="1">
+              <!-- Paragraph -->
+              <div class="Paragraph">
+				<!-- titBox -->
+				<comp-script-box class="titBox">
+					<script-cont src="../media/mp3/3_122_read_00.mp3" en="James Webb Space Telescope" kr="제임스 웹 우주 망원경"></script-cont>
+				</comp-script-box>
+				<!-- scriptBox -->
+				<comp-script-box>
+					<script-cont src="../media/mp3/3_122_read_01.mp3" en="Today, I’m here to meet Dr. Jane Roman, a space scientist, to talk about the James Webb Space Telescope" kr="오늘 저는 우주 과학자인 Jane Roman 박사를 만나 제임스 웹 우주 망원경(JWST)에<span style='left:-20px'>대해 이야기하기 위해 이곳에 왔습니다.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_122_read_02.mp3" en="(JWST)." kr="해석x"></script-cont>
+					<script-cont src="../media/mp3/3_122_read_03.mp3" en="Dr. Roman, I heard that it was launched on December 25, 2021." kr="Roman 박사님, 저는 그것이 2021년 12월 25일에 발사되었다고<span style='left:-154px'>들었습니다.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_122_read_04.mp3" en="Can you introduce the JWST?" kr="JWST를 소개해 주실 수 있나요?"></script-cont>
+				</comp-script-box>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../include/js/config.js"></script>
+  <script src="../include/js/pageManager.js"></script>
+  <script src="../include/js/components.js"></script>
+  <script src="../include/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+    });
+  </script>
+</body>
+</html>

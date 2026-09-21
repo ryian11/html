@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=1280, height=720, initial-scale=1.0">
+
+  <link rel="stylesheet" href="include/contentsUI/css/index.css">
+  <link rel="stylesheet" href="include/css/common.css">
+  <link rel="stylesheet" href="include/css/reading.css">
+  <link rel="stylesheet" href="css/p123_01.css">
+
+  <title>p123_01</title>
+</head>
+<body>
+  <div id="wrap" class="js-scale" data-snd-ctl="true">
+    <div id="container" data-use="read">
+      <div class="js-scrollContainer scrollContainer mainContent" data-style="custom" data-scroll-idx="0">
+        <div class="js-scrollBox scrollBox readingBox" data-scroll-idx="0">
+          <div class="js-player Player js-selectChangePlayer readingCont" data-ply-type="language" data-ply-idx="1" data-ply-controls="play, pause, stop, progress" data-ply-opts="speed, again" data-speed-btn="0.8,1.0,1.2,1.5" data-ply-mode="basic">
+            <div class="readingBtnBox Top">
+              <div class="btnBox">
+                <button class="js-openPopBtn videoPopBtn" data-pop-idx="1"></button>
+              </div>
+
+              <div class="btnBox">
+                <button class="js-openPopBtn listenTotalBtn" data-pop-idx="2"></button>
+                <button class="js-bgCover bgCoverBtn" data-ply-idx="1"></button>
+              </div>
+            </div>
+            <div class="js-languageContainer languageContainer js-readHide" data-ply-idx="1">
+              <div class="ParagraphBox">
+                <!-- Paragraph -->
+                <div class="Paragraph spk">
+                  <comp-language-target src="media/mp3/3_123_read_02.mp3" text="The JWST is the most powerful telescope in history."></comp-language-target>
+                  <comp-language-target scrollTop="508" src="media/mp3/3_123_read_03.mp3" text="|1|It’s as wide as a tennis [mark:1: court] and as tall as a three-story building."></comp-language-target>
+                  <comp-language-target scrollTop="508" src="media/mp3/3_123_read_04.mp3" text="|2|If a person stood next to the telescope, the person would look like a tiny [mark:2: ant]."></comp-language-target>
+                  <comp-language-target scrollTop="508" src="media/mp3/3_123_read_05.mp3" text="To observe [mark:3: deep] into space, it has 18 [mark:4: golden] mirrors that work like one big eye."></comp-language-target>
+                </div>
+                <!-- Paragraph -->
+                <div class="Paragraph mic">
+                  <comp-language-target scrollTop="508" src="media/mp3/3_123_read_06.mp3" text="How did scientist launch such a large telescope into space?"></comp-language-target>
+                </div>
+                <!-- Paragraph -->
+                <div class="Paragraph spk">
+                  <comp-language-target scrollTop="1061" src="media/mp3/3_123_read_07.mp3" text="We found the answer in paper folding."></comp-language-target>
+                  <comp-language-target scrollTop="1061" src="media/mp3/3_123_read_08.mp3" text="|3|The JWST was folded twelve times so that it could [mark:5: fit into] a space rocket."></comp-language-target>
+                  <comp-language-target scrollTop="1061" src="media/mp3/3_123_read_09.mp3" text="Then the telescope traveled 1.5 [mark:6: million] kilometers away from Earth."></comp-language-target>
+                  <comp-language-target scrollTop="1061" src="media/mp3/3_123_read_10.mp3" text="|4|After the JWST was launched, it spent about a month traveling to its [mark:7: final] location."></comp-language-target>
+                  <comp-language-target scrollTop="1061" src="media/mp3/3_123_read_11.mp3" text="During this time, it was slowly [mark:8: unfolded], [mark:9: piece by piece], like a [mark:10: blooming] flower."></comp-language-target>
+                </div>
+              </div>
+            </div>
+
+            <div class="js-languageContainer languageContainer js-readShow" data-ply-idx="1"></div>
+
+            <div class="readingBtnBox Bot direcR">
+              <div class="btnBox">
+                <button class="js-openPopBtn questionBtn" data-pop-idx="7">
+                  <span>Q2</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 영상 팝업 -->
+    <div class="js-popupContent popup" data-pop-idx="1" data-use="video">
+      <div class="popContentContainer">
+        <div class="js-player Player js-selectChangePlayer" data-ply-type="video" data-ply-idx="2" data-ply-controls="play, pause, stop, progress, zoom" data-ply-opts="speed, again" data-speed-btn="0.8,1.0,1.2,1.5" data-ply-mode="basic" data-script-mode="bg">
+          <video data-name="ON" class="js-media" playsinline="" preload="none">
+            <source src="media/mp4/l7_read_script.mp4" type="video/mp4">
+            <track kind="captions" src="media/mp4/l7_read.vtt" srclang="en" label="English">
+          </video>
+          <video data-name="OFF" class="js-media" playsinline="" preload="none">
+            <source src="media/mp4/l7_read.mp4" type="video/mp4">
+            <track kind="captions" src="media/mp4/l7_read.vtt" srclang="en" label="English">
+          </video>
+        </div>
+
+        <button class="js-closePopBtn closePopBtn"></button>
+      </div>
+    </div>
+
+    <!-- 본문 전체 듣기 팝업 -->
+    <div class="js-popupContent popup Iframe" data-pop-idx="2">
+      <iframe src="popup/p122_02_all.html" frameborder="0"></iframe>
+      <button class="js-closePopBtn closePopBtn"></button>
+    </div>
+
+    <!-- 해석 팝업 -->
+    <div class="js-popupContent popup Iframe" data-pop-idx="3">
+      <iframe src="popup/p123_01_kor1.html" frameborder="0"></iframe>
+      <button class="js-closePopBtn closePopBtn"></button>
+    </div>
+
+    <!-- dictation 팝업 -->
+    <div class="js-popupContent popup Iframe" data-pop-idx="4">
+      <iframe src="popup/p123_01_dic1.html" frameborder="0"></iframe>
+      <button class="js-closePopBtn closePopBtn"></button>
+    </div>
+
+    <!-- 구문 해설 -->
+    <comp-syntax></comp-syntax>
+
+    <!-- 미니 단어장 -->
+    <comp-mini-word></comp-mini-word>
+
+    <!-- readingQuiz 팝업 -->
+    <div class="js-popupContent popup" data-pop-idx="7" data-use="readingQuiz" data-pop-opts="noClose">
+      <div class="popContentContainer">
+        <!-- popHeader -->
+        <header class="popHeader">
+          <div class="popHeaderInner">
+            <strong class="popHeaderTit"></strong>
+          </div>
+          <button class="js-closePopBtn closePopBtn"></button>
+        </header>
+
+        <!-- popContent -->
+        <div class="popContent">
+          <!-- quizBox -->
+          <div class="js-quizContainer quizBox arrayV" data-quiz-type="input" data-quiz-opts="noAlert, noSound, noSolve, noRemoveSpace, noReset">
+            <!-- quizList -->
+            <div class="quizTitBox">
+              <span class="marker read">Q2</span>
+              <div class="listTxt readingQuestion" data-include="interpretText">
+                <p class="js-narrationBtn narrText" data-narr-idx="1" data-narr-src="media/mp3/3_123_question_02.mp3">The scientists folded the James Webb Space Telescope to launch it into space.</p>
+                <span class="js-interpretTarget interpretText" data-interpret-idx="1">해석x</span>
+              </div>
+            </div>
+            <div class="readingAnswer">
+              <div class="js-quizInputBox inputBox writingBox Br">
+                <textarea rows="3" class="js-quizItem quizInput pen" placeholder=" " data-answer=" "></textarea>
+                <!-- quizTarget -->
+                <div class="js-quizTarget quizTarget Answer">
+                  <span class="js-narrationBtn narrText" data-narr-idx="2" data-narr-src="media/mp3/3_123_question_02.mp3" data-include="interpretText">The scientists folded the James Webb Space Telescope to launch it into space.
+                    <span class="js-interpretTarget interpretText" data-interpret-idx="1">해석x</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 버튼 -->
+    <div class="botEleBox">
+      <!-- main -->
+      <div class="js-btnHandler btnHandlerBox selected" data-include="player" data-cont-type="main">
+        <div class="btnBundle">
+          <div class="js-controlBox controlsBox">
+            <div class="js-controlBoxContainer mediaControl" data-ply-type="language" data-ply-idx="1"></div>
+          </div>
+
+          <button class="js-repeatTalk repeatReadBtn"></button>
+          <button class="js-openPopBtn korBtn" data-pop-idx="3"></button>
+          <button class="js-openPopBtn dictationBtn" data-pop-idx="4"></button>
+          <button class="js-readHideBtn readHideBtn" data-ply-idx="1"></button>
+        </div>
+      </div>
+
+      <!-- popup -->
+      <div class="js-btnHandler btnHandlerBox" data-include="player" data-cont-type="popup" data-pop-idx="1">
+        <div class="btnBundle">
+          <div class="controlsBox">
+            <div class="js-controlBoxContainer mediaControl" data-ply-type="video" data-ply-idx="2"></div>
+          </div>
+
+          <button class="js-repeatTalk repeatReadBtn"></button>
+        </div>
+      </div>
+
+      <!-- popup -->
+      <div class="js-btnHandler btnHandlerBox" data-cont-type="popup" data-pop-idx="7">
+        <div class="btnBundle">
+          <comp-btn-group hdlQuiz="0"></comp-btn-group>
+          <button class="js-sndEffect js-interpretItem korBtn" data-snd="click" data-interpret-idx="1" data-disabled="true" data-hdl-idx="0"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="include/contentsUI/js/config.js"></script>
+  <script src="include/contentsUI/js/index.js"></script>
+  <script src="include/contentsUI/js/contentUI.js"></script>
+  <script src="include/js/config.js"></script>
+  <script src="include/js/pageManager.js"></script>
+  <script src="include/js/components.js"></script>
+  <script src="include/js/common.js"></script>
+  <script src="include/js/reading.js"></script>
+  <script src="js/p123_01.js"></script>
+</body>
+</html>

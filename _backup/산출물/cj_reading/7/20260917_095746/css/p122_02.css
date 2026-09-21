@@ -1,0 +1,31 @@
+@charset "utf-8";
+.readingCont {
+	width: 100%;
+	height: calc(1918px/2);
+	padding-top: 70px;
+	background: url(../images/p122_02/read_bg.png) top center / 100% no-repeat;
+}
+
+.mainTitle {
+	width: calc(1422px/2);
+	height: calc(396px/2);
+	margin: 0 auto 50px;
+	background: url(../images/p122_02/title.png) top center / 100% no-repeat;
+}
+.mainTitle.on { background-image: url(../images/p122_02/title_h.png); }
+.isPlayAgaing .mainTitle.on { background-image: url(../images/p122_02/title_b.png); }
+
+.readingCont { position: relative; }
+/* 문단 첫머리 — 말하는 이와 마이크 아이콘 (본문 글자가 아니라 꾸밈이라 CSS 로 붙인다) */
+.mainContent .ParagraphBox .Paragraph.spk .readText:first-of-type::before {
+	content: 'Dr. Roman'; color: #2E6DB4; font-family: var(--gothic_EB); margin-right: 18px; }
+.mainContent .ParagraphBox .Paragraph.mic .readText:first-of-type::before {
+	content: ''; display: inline-block; width: 26px; height: 26px; margin-right: 10px;
+	vertical-align: -5px; background: url(../images/p122_02/icon_mic.png) center/contain no-repeat; }
+.readingCont .label { position: absolute; margin: 0; font-family: var(--gothic_EB); }
+
+.mainContent .ParagraphBox { margin-top: 250px; }
+.mainContent .ParagraphBox .Paragraph { width: 880px; margin-left: 350px; }
+
+/* 리딩퀴즈 */
+.popup[data-use="readingQuiz"] .readingAnswer .inputBox { width: 100%;}

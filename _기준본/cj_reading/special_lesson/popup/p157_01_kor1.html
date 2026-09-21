@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <link rel="stylesheet" href="../include/contentsUI/css/index.css">
+  <link rel="stylesheet" type="text/css" href="../include/css/common.css">
+
+  <title>p157_01_kor1</title>
+  <style>
+    /* 인덴트 */
+    .scriptContainer .scriptBox:not(.titBox, .subTitBox, .list) .Script:first-of-type {margin-left: 20px;}
+  </style>
+</head>
+<body>
+  <div class="js-scale iframePopup" data-use="kor">
+    <div class="popContentContainer">
+      <!-- popHeader -->
+      <header class="popHeader">
+        <div class="popHeaderInner">
+          <h2 class="popHeaderTit">
+            <span>해석</span>
+          </h2>
+        </div>
+        <button class="js-closePopBtn closePopBtn"></button>
+      </header>
+      <!-- popContentBox -->
+      <div class="popContentBox">
+        <!-- popContent -->
+        <div class="js-scrollContainer scrollContainer popContent" data-scroll-idx="1">
+          <div class="js-player Player js-scrollBox scrollBox" data-ply-type="language" data-ply-idx="1" data-scroll-idx="1">
+            <!-- scriptContainer -->
+            <div class="js-languageContainer scriptContainer" data-ply-idx="1">
+              <!-- Paragraph -->
+              <div class="Paragraph">
+				<!-- scriptBox -->
+				<comp-script-box>
+					<script-cont src="../media/mp3/3_157_read_01.mp3" en="Diana even started having a good time in math class." kr="Diana는 심지어 수학 시간도 즐기기 시작했다."></script-cont>
+					<script-cont src="../media/mp3/3_157_read_02.mp3" en="“x is three!”" kr="“x는 3이에요!”"></script-cont>
+					<script-cont src="../media/mp3/3_157_read_03.mp3" en="Diana yelled when the teacher asked for an answer to an equation." kr="선생님이 방정식 답을 물었을 때 Diana는 소리쳤다."></script-cont>
+					<script-cont src="../media/mp3/3_157_read_04.mp3" en="At night, Diana dreamed that she danced and danced, repeating her favorite dance steps over and over." kr="밤에 Diana는 가장 좋아하는<span style='left:-730px'>댄스 스텝을 계속해서 반복하며 춤을 추고 또 추는 꿈을 꾸었다.</span>"></script-cont>
+					<script-cont src="../media/mp3/3_157_read_05.mp3" en="Diana thought that maybe she would dance on a big stage someday." kr="Diana는 아마도 그녀가 언젠가<span style='left:-722px'>큰 무대에서 춤을 출 것이라고 생각했다.</span>"></script-cont>
+					<script-cont scrollTop="231" src="../media/mp3/3_157_read_06.mp3" en="Or maybe not." kr="어쩌면 아닐<span style='left:-994px'>수도 있겠지만.</span>"></script-cont>
+					<script-cont scrollTop="231" src="../media/mp3/3_157_read_07.mp3" en="Of course, she PASSED her math test." kr="물론, 그녀는 수학 시험을 통과했다."></script-cont>
+					<script-cont scrollTop="231" src="../media/mp3/3_157_read_08.mp3" en="Adapted from Diana Dances" kr="해석x"></script-cont>
+					<script-cont scrollTop="231" src="../media/mp3/3_157_read_09.mp3" en="(Luciano Lozano, 2021)" kr="해석x"></script-cont>
+				</comp-script-box>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../include/js/config.js"></script>
+  <script src="../include/js/pageManager.js"></script>
+  <script src="../include/js/components.js"></script>
+  <script src="../include/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log(window.CONFIG.AUDIO_SRC = '../include/media/')
+    });
+  </script>
+</body>
+</html>

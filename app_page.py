@@ -1,0 +1,714 @@
+# -*- coding: utf-8 -*-
+"""화면. app.py 가 이 문자열 하나를 내보낸다."""
+
+PAGE = r'''<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>HTML 생성기</title>
+<style>
+:root{--line:#dcdfe4;--bg:#f6f7f9;--ink:#1c1f23;--dim:#6b7280;--ok:#137a3d;--ng:#b3261e;--sel:#1a56c4}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.55 "맑은 고딕","Malgun Gothic",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line)}
+header b{font-size:15px}
+select,input,button{font:inherit;padding:5px 9px;border:1px solid var(--line);border-radius:5px;background:#fff}
+button{cursor:pointer}
+button.go{background:var(--sel);color:#fff;border-color:var(--sel);font-weight:700;padding:6px 16px}
+button:disabled{opacity:.5;cursor:default}
+main{display:grid;grid-template-columns:330px 1fr;gap:0;height:calc(100vh - 47px)}
+aside{border-right:1px solid var(--line);background:#fff;overflow:auto;padding:14px}
+section{overflow:hidden;display:grid;grid-template-rows:auto 1fr auto}
+h3{margin:18px 0 7px;font-size:12px;letter-spacing:.04em;color:var(--dim);text-transform:uppercase}
+h3:first-child{margin-top:0}
+.slot{margin-bottom:8px}
+.slot label{display:block;font-size:12px;color:var(--dim);margin-bottom:2px}
+.slot input{width:100%}
+.slot .opt{color:#9aa0a6}
+.units{display:flex;flex-wrap:wrap;gap:6px}
+.units label{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:5px;padding:3px 9px;background:#fff;cursor:pointer}
+.units input{margin:0}
+.steps{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--dim)}
+.bar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.files{display:flex;gap:6px;flex-wrap:wrap;max-height:74px;overflow:auto}
+.files a{font-size:12px;padding:2px 8px;border:1px solid var(--line);border-radius:4px;background:#fff;text-decoration:none;color:var(--ink)}
+.files a.on{background:var(--sel);color:#fff;border-color:var(--sel)}
+iframe{width:100%;height:100%;border:0;background:#fff}
+footer{border-top:1px solid var(--line);background:#fff;max-height:210px;overflow:auto}
+pre{margin:0;padding:10px 14px;font:12px/1.5 Consolas,monospace;white-space:pre-wrap}
+.ok{color:var(--ok);font-weight:700}.ng{color:var(--ng);font-weight:700}
+.muted{color:var(--dim)}
+.browse{margin-top:4px;font-size:12px;display:none;border:1px solid var(--line);border-radius:5px;max-height:170px;overflow:auto;background:#fafbfc}
+.browse div{padding:3px 8px;cursor:pointer;border-bottom:1px solid #eef0f2}
+.browse div:hover{background:#eaf0fb}
+.browse .f{color:var(--dim);cursor:default}
+details.pj{margin-top:10px;border:1px solid var(--line);border-radius:6px;background:#fff}
+details.pj summary{padding:6px 10px;font-size:12px;color:var(--dim);cursor:pointer}
+details.pj[open] summary{border-bottom:1px solid var(--line)}
+#pj table{width:100%;border-collapse:collapse;font-size:12px}
+#pj td{padding:3px 4px;border-bottom:1px solid #f0f1f3;vertical-align:middle}
+#pj td.u{white-space:nowrap;color:var(--dim)}
+#pj input{width:100%;border:1px solid transparent;border-radius:4px;padding:3px 5px;background:#fbfcfd;font:inherit}
+#pj input:focus{border-color:var(--sel);background:#fff}
+#pj input.bad{background:#fdeceb}
+.scope{margin-top:9px;padding:7px 10px;border-radius:6px;font-size:13px;
+  border:1px solid var(--line);background:#fafbfc}
+.scope b{color:var(--sel)}
+.scope.all{background:#fff6e8;border-color:#e8c27a}
+.scope.all b{color:#a8600a}
+.tabs{display:flex;gap:4px}
+.tabs button{padding:4px 12px;font-size:13px}
+.tabs button.on{background:var(--sel);color:#fff;border-color:var(--sel)}
+#cfg{display:none;overflow:auto;background:#fff;padding:14px 18px}
+#cfg h4{margin:0 0 6px;font-size:14px}
+#cfg .pg{border:1px solid var(--line);border-radius:7px;padding:12px 14px;margin-bottom:14px}
+#cfg .pg>b{font-size:14px}
+#cfg .fld{margin:10px 0 0}
+#cfg .fld>label{display:block;font-size:12px;color:var(--dim);margin-bottom:3px}
+#cfg textarea{width:100%;font:12px/1.5 Consolas,monospace;border:1px solid var(--line);
+  border-radius:5px;padding:6px 8px;resize:vertical}
+#cfg table{width:100%;border-collapse:collapse;font-size:13px}
+#cfg td{padding:2px 3px;vertical-align:top;border-bottom:1px solid #f0f1f3}
+#cfg td.n{width:34px;color:var(--dim);font:12px Consolas,monospace;padding-top:8px}
+#cfg td.lead{width:38px;color:#b06000;font:12px Consolas,monospace;padding-top:8px}
+#cfg input.t{width:100%;border:1px solid transparent;border-radius:4px;padding:4px 6px;background:#fbfcfd}
+#cfg input.t:focus{border-color:var(--sel);background:#fff}
+#cfg input.t.over{background:#fff7e6;border-color:#e8c27a}
+#cfg input.t.nokr{background:#fdeceb}
+#cfg .sel{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--dim)}
+#cfg .img{font:12px Consolas,monospace;color:var(--dim)}
+#cfg .save{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);
+  padding:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* 개발자 도구 — 켤 때만 보인다. 감추기만 할 뿐 DOM 에는 그대로 있어서 동작은 같다. */
+.dev{display:none}
+body.devon .dev{display:block}
+.devbox{margin-top:22px;padding-top:12px;border-top:2px solid var(--line)}
+.warn{color:var(--ng);font-size:11px;line-height:1.4;margin:4px 0 0}
+.fold{margin:6px 0}
+.fold>summary{cursor:pointer;font-size:12px;color:var(--dim);padding:3px 0;list-style:none}
+.fold>summary::before{content:'\25b8 ';}
+.fold[open]>summary::before{content:'\25be ';}
+.fold>div{padding:6px 0 2px}
+.devtog{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--dim);cursor:pointer}
+.allchk{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--dim);cursor:pointer}
+/* 분석 결과 카드 */
+.card{margin-top:10px;border:1px solid var(--line);border-radius:7px;background:#fff;padding:10px 12px}
+.card h4{margin:0 0 3px;font-size:13px}
+.card .when{font-size:11px;color:var(--dim);margin:0 0 8px}
+.card table{width:100%;border-collapse:collapse;font-size:12px}
+.card td{padding:2px 0;vertical-align:top}
+.card td.v{text-align:right;font-weight:700;white-space:nowrap;padding-left:8px}
+.card td.why{color:var(--dim);font-size:11px;padding:0 0 4px}
+.card .act{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.card .none{color:var(--dim)}
+/* 미리보기 파일 목록 — 고른 쪽 / 단원 공통 / 그 밖 */
+.files .grp{display:inline-flex;align-items:center;gap:4px;margin-right:12px;flex-wrap:wrap}
+.files .grp>b{font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.03em}
+.files a.sub{opacity:.78}
+.files details.grp{display:inline-block}
+.files details.grp>summary{cursor:pointer;font-size:11px;color:var(--dim);list-style:none}
+.files details.grp>summary::before{content:'\25b8 '}
+.files details.grp[open]>summary::before{content:'\25be '}
+.files details.grp>span{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:6px}
+.files .empty{font-size:11px;color:var(--dim)}
+.prep{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.prep .muted{font-size:12px}
+</style></head><body>
+
+<header>
+  <b>HTML 생성기</b>
+  <select id="recipe"></select>
+  <span id="rname" class="muted"></span>
+  <span style="flex:1"></span>
+  <span id="state" class="muted"></span>
+  <label class="devtog"><input type="checkbox" id="devon" onchange="devMode(this.checked)"> 개발자 도구</label>
+  <button onclick="quit()">끝내기</button>
+</header>
+
+<main>
+<aside>
+  <h3>1. 프로젝트</h3>
+  <div id="slots"></div>
+  <details class="fold"><summary>자료 위치 직접 정하기</summary>
+    <div id="slots_opt"></div>
+  </details>
+  <button onclick="saveSlots()">저장</button>
+  <details class="pj" id="pjbox" ontoggle="if(this.open)loadProject()">
+    <summary>단원별 자료 — 녹음 대본 시트 · 지도서 PDF</summary>
+    <div id="pj" style="padding:8px 10px"></div>
+  </details>
+
+  <h3>2. 규칙 만들기</h3>
+  <div id="pslots"></div>
+  <div style="display:flex;gap:8px;margin:6px 0;align-items:center;flex-wrap:wrap">
+    <span class="muted" style="font-size:12px">견본 쪽</span>
+    <label class="allchk" style="margin-left:auto"><input type="checkbox" id="ppall"
+      onchange="allPages(this.checked)"> 전체</label>
+  </div>
+  <div class="units" id="ppages"><span class="muted">프로토 단원을 적으면 쪽이 나옵니다</span></div>
+  <div style="margin-top:8px"><button onclick="analyze()">규칙 분석</button></div>
+  <p class="muted" id="pinfo" style="font-size:12px;margin:7px 0 0"></p>
+  <div id="pcard"></div>
+
+  <h3>3. 만들기</h3>
+  <select id="unit" style="width:100%" onchange="unitPicked()"></select>
+  <details class="fold" id="multibox"><summary>여러 단원 한꺼번에</summary>
+    <div class="units" id="units"></div>
+  </details>
+
+  <div style="display:flex;gap:8px;margin:10px 0 6px;align-items:center">
+    <b style="font-size:12px;color:var(--dim);letter-spacing:.04em">쪽</b>
+    <span class="muted" style="font-size:12px">(비우면 단원 전체)</span>
+    <label class="allchk" style="margin-left:auto"><input type="checkbox" id="pgall"
+      onchange="allUnitPages(this.checked)"> 전체</label>
+  </div>
+  <div class="units" id="pages"><span class="muted">단원을 고르세요</span></div>
+  <div style="display:flex;margin-top:6px"><span id="pcount" class="muted"
+    style="font-size:12px;margin-left:auto"></span></div>
+  <div id="scope" class="scope"></div>
+
+  <div style="margin-top:12px"><button class="go" id="run" onclick="run()">생성</button></div>
+  <p class="muted" style="font-size:12px;margin:8px 0 0">
+    산출 폴더에 바로 씁니다. 덮어쓰기 전에 <code>_backup/날짜시각</code> 으로 자동 저장됩니다.<br>
+    쪽을 고르면 <b>그 쪽만</b> 씁니다. 고르지 않은 쪽 파일은 건드리지 않습니다.<br>
+    들머리 쪽·전체듣기 팝업·예시답안은 단원 전체에서 나오므로 늘 함께 새로 씁니다.</p>
+
+  <h3>되돌리기</h3>
+  <select id="bk" style="width:100%"></select>
+  <button style="margin-top:6px" onclick="restore()">이전 결과로 되돌리기</button>
+
+  <div class="dev devbox">
+    <h3 style="margin-top:0">개발자 도구</h3>
+    <div id="devslots"></div>
+
+    <p class="muted" style="font-size:12px;margin:10px 0 4px">단계 — 끄면 그 단계를 건너뜁니다</p>
+    <div class="steps" id="steps"></div>
+
+    <p class="muted" style="font-size:12px;margin:14px 0 4px">규칙 점검</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button style="font-size:12px;padding:3px 9px" onclick="loadProto()">견본 쪽 다시 불러오기</button>
+      <button style="font-size:12px;padding:3px 9px" onclick="compare()">코드와 대조</button>
+    </div>
+
+    <p class="muted" style="font-size:12px;margin:14px 0 4px">회귀 검사</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button style="font-size:12px;padding:3px 9px" onclick="regress('check')">기준본과 견주기</button>
+      <button style="font-size:12px;padding:3px 9px" onclick="regress('save')">지금 결과를 기준본으로</button>
+    </div>
+    <p class="warn">※ [기준본과 견주기] 를 돌린 뒤에는 단원자료/scrolls*.py · popscroll*.py 를
+      확인하세요. 잰 값이 덮어써진 적이 있습니다 (ISSUES #5, 원인 미확인).</p>
+    <p class="muted" style="font-size:11px;margin:6px 0 0">
+      임시 폴더에 다시 뽑아 바이트 단위로 견줍니다. 실기 폴더는 건드리지 않습니다.</p>
+  </div>
+</aside>
+
+<section>
+  <div class="bar">
+    <span class="tabs">
+      <button id="tab_pv" class="on" onclick="tab('pv')">미리보기</button>
+      <button id="tab_cfg" onclick="tab('cfg')">쪽 손질</button>
+    </span>
+    <span class="files" id="files"></span>
+  </div>
+  <iframe id="pv"></iframe>
+  <div id="cfg"></div>
+  <footer><pre id="log" class="muted">자료를 정하고 단원을 고른 뒤 [생성] 을 누르세요.</pre></footer>
+</section>
+</main>
+
+<script>
+let R=null, JOB=null, CUR={unit:null};
+let SEL={};   // {단원: [고른 쪽]} — 화면을 다시 그려도 남는다
+const $=s=>document.querySelector(s);
+
+async function get(u){return (await fetch(u)).json()}
+async function post(u,b){return (await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})).json()}
+
+async function boot(){
+  const rs=await get('/api/recipes');
+  $('#recipe').innerHTML=rs.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
+  $('#recipe').onchange=()=>loadRecipe($('#recipe').value);
+  if(rs.length) loadRecipe(rs[0].id);
+  scopeInfo();
+  $('#steps').innerHTML=['extract','build','measure','verify']
+    .map(s=>`<label><input type="checkbox" class="st" value="${s}" checked> ${
+      ({extract:'추출',build:'생성',measure:'측정',verify:'검증'})[s]}</label>`).join('');
+}
+
+async function loadRecipe(id){
+  R=await get('/api/recipe/'+id);
+  $('#rname').textContent=R.name;
+  const dat=R.slots.filter(s=>!s.key.startsWith('proto_'));
+  const pro=R.slots.filter(s=>s.key.startsWith('proto_'));
+  const slotHtml=s=>`
+    <div class="slot">
+      <label>${s.label}${s.optional?' <span class="opt">(선택)</span>':''}</label>
+      <input id="sl_${s.key}" value="${s.value||''}" placeholder="${s.hint||(s.kind==='dir'?'폴더 경로':s.kind==='text'?'':'파일 경로')}"
+             onfocus="this.nextElementSibling.style.display='none'">
+      <div class="browse"></div>
+      ${s.kind==='text'?'':`<button style="margin-top:3px;font-size:12px;padding:2px 8px"
+              onclick="browse('${s.key}')">찾아보기</button>`}
+    </div>`;
+  $('#slots').innerHTML=dat.filter(s=>s.key==='root').map(slotHtml).join('');
+  $('#slots_opt').innerHTML=dat.filter(s=>s.key!=='root').map(slotHtml).join('');
+  $('#pslots').innerHTML=pro.filter(s=>s.key==='proto_lesson').map(slotHtml).join('');
+  $('#devslots').innerHTML=pro.filter(s=>s.key!=='proto_lesson').map(slotHtml).join('');
+  const lab=u=>(R.unitLabels&&R.unitLabels[u])||(/^\d+$/.test(u)?u+'단원':u);
+  $('#unit').innerHTML='<option value="">— 단원 고르기 —</option>'
+    + R.units.map(u=>`<option value="${u}">${lab(u)}</option>`).join('');
+  $('#units').innerHTML=R.units.map(u=>`<label><input type="checkbox" class="u" value="${u}" onchange="multiPicked()"> ${lab(u)}</label>`).join('')
+    || '<span class="muted">자료 경로를 먼저 정하세요</span>';
+  $('#pinfo').textContent='';
+  $('#pcard').innerHTML='';
+  // 프로토 단원을 적거나 바꾸면 견본 쪽이 저절로 나온다 (기존 loadProto 재사용)
+  const pl=$('#sl_proto_lesson');
+  if(pl){
+    pl.onchange=()=>protoChanged();
+    pl.onkeyup=e=>{ if(e.key==='Enter'){ e.target.blur(); protoChanged(); } };
+  }
+  SEL={}; PJ=null;
+  if(pl && pl.value.trim()) loadProto();
+  if($('#pjbox').open) loadProject();
+  $('#pages').innerHTML='<span class="muted">단원을 고르세요</span>';
+  scopeInfo();
+}
+
+// ---------------------------------------------- 단원별 자료 (project.json)
+// 녹음 대본의 시트 이름과 지도서 PDF 는 교재마다 다르다. 파일을 직접 고치지 않고
+// 여기서 고친다.
+let PJ=null;
+
+async function loadProject(){
+  PJ=await get('/api/project?recipe='+R.id);
+  const rows=PJ.units.map(u=>`<tr data-id="${esc(u.id)}">
+      <td class="u">${esc(u.name)}</td>
+      <td><input class="pj_sheet" value="${esc(u.sheet)}" placeholder="${/^\d+$/.test(u.id)?u.id+'과':'예: SL'}"></td>
+      <td><input class="pj_guide${u.guide&&!u.guideOk?' bad':''}" value="${esc(u.guide)}"
+            placeholder="지도서 PDF (비우면 각론&lt;번호&gt; 자동)"></td>
+    </tr>`).join('');
+  $('#pj').innerHTML=`<table><tr><td class="u">단원</td><td class="u">시트</td><td class="u">지도서 PDF</td></tr>${rows}</table>
+    <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+      <button onclick="saveProject()">단원별 자료 저장</button>
+      <span class="muted" style="font-size:11px">경로는 프로젝트 폴더 기준. 붉은 칸은 그 파일이 없다는 뜻입니다.</span>
+    </div>`;
+}
+
+async function saveProject(){
+  const units=[...document.querySelectorAll('#pj tr[data-id]')].map(tr=>({
+    id:tr.dataset.id,
+    sheet:tr.querySelector('.pj_sheet').value,
+    guide:tr.querySelector('.pj_guide').value }));
+  const r=await post('/api/project',{recipe:R.id,units});
+  log(r.changed ? ('단원별 자료 '+r.changed+'곳을 고쳤습니다.') : '바뀐 것이 없습니다.');
+  loadProject();
+}
+
+// ---------------------------------------------- 생성할 쪽
+function unitLabel(u){
+  return (R&&R.unitLabels&&R.unitLabels[u]) || (/^\d+$/.test(u)?u+'단원':u);
+}
+function pickedUnits(){
+  const multi=[...document.querySelectorAll('.u:checked')].map(e=>e.value);
+  if(multi.length) return multi;                 // 접이식에서 고른 것이 있으면 그것
+  const s=$('#unit');
+  return (s && s.value) ? [s.value] : [];        // 없으면 드롭다운 하나
+}
+
+// 드롭다운을 바꾸면 '여러 단원' 체크는 지운다 — 무엇을 만드는지 헷갈리지 않게
+function unitPicked(){
+  document.querySelectorAll('.u:checked').forEach(e=>e.checked=false);
+  loadPages();
+}
+// 반대로 '여러 단원' 을 고르면 드롭다운을 비운다
+function multiPicked(){
+  if(document.querySelectorAll('.u:checked').length && $('#unit')) $('#unit').value='';
+  loadPages();
+}
+function oneUnit(){ const u=pickedUnits(); return u.length===1?u[0]:null; }
+function pickedPages(){ return [...document.querySelectorAll('#pages .pg:checked')].map(e=>e.value); }
+
+async function loadPages(){
+  const us=pickedUnits();
+  if(us.length!==1){
+    $('#pages').innerHTML='<span class="muted">'
+      + (us.length?'단원을 하나만 골라야 쪽을 고를 수 있습니다':'단원을 고르세요')+'</span>';
+    $('#pcount').textContent='';
+    scopeInfo(); return;
+  }
+  const u=us[0];
+  const r=await get('/api/pages?recipe='+R.id+'&unit='+encodeURIComponent(u));
+  const have=r.pages||[];
+  // 없어진 쪽만 빼고 나머지 고른 것은 그대로 살린다
+  SEL[u]=(SEL[u]||[]).filter(p=>have.indexOf(p)>=0);
+  const on={}; SEL[u].forEach(p=>on[p]=1);
+  $('#pages').innerHTML=have.map(p=>
+      `<label><input type="checkbox" class="pg" value="${p}"${on[p]?' checked':''}
+        onchange="pageToggled()"> ${p}</label>`).join('')
+    || '<span class="prep"><span class="muted">아직 이 단원 자료를 읽지 않았습니다.</span>'
+       + '<button onclick="prepUnit()">단원 준비</button></span>';
+  scopeInfo();
+}
+
+// [단원 준비] — 원고만 읽어 data<N>.py 를 만든다. 산출 폴더는 건드리지 않는다.
+// 새 API 를 만들지 않고 기존 /api/run 에 추출 단계만 보낸다.
+async function prepUnit(){
+  const u=oneUnit();
+  if(!u){ log('단원을 하나만 고르세요.'); return; }
+  $('#run').disabled=true;
+  $('#state').textContent='단원 준비…';
+  log(unitLabel(u)+' — 원고를 읽는 중입니다 (추출만 돕니다)…');
+  const r=await post('/api/run',{recipe:R.id,units:[u],steps:['extract'],pages:null});
+  JOB=r.job; poll();            // poll 이 끝나면 loadPages() 가 쪽 목록을 다시 그린다
+}
+
+function pageToggled(){
+  const u=oneUnit();
+  if(u) SEL[u]=pickedPages();
+  scopeInfo();
+}
+
+function allUnitPages(on){
+  document.querySelectorAll('#pages .pg').forEach(e=>e.checked=!!on);
+  pageToggled();
+}
+
+// 지금 무엇을 만들지 — 글자와 버튼에 그대로 적는다
+function scopeInfo(){
+  const us=pickedUnits(), u=oneUnit(), btn=$('#run'), box=$('#scope');
+  const have=document.querySelectorAll('#pages .pg').length;
+  const got=pickedPages();
+  if($('#pcount')) $('#pcount').textContent = have ? ('고른 쪽 '+got.length+' / '+have) : '';
+  if($('#pgall')) $('#pgall').checked = have>0 && got.length===have;
+  if(!btn||!box) return;
+  box.classList.remove('all');
+  if(!us.length){
+    box.innerHTML='<span class="muted">단원을 고르세요.</span>';
+    btn.textContent='생성'; btn.disabled=true; return;
+  }
+  btn.disabled=false;
+  if(us.length>1){
+    box.classList.add('all');
+    box.innerHTML='<b>'+us.map(unitLabel).join(', ')+' 전체</b> 를 만듭니다. (쪽을 고르려면 단원을 하나만)';
+    btn.textContent=us.length+'개 단원 전체 생성'; return;
+  }
+  if(got.length){
+    box.innerHTML='고른 <b>'+got.length+'쪽</b> 만 만듭니다 — '+got.join(', ')
+      +'<br><span class="muted">고르지 않은 쪽 파일은 건드리지 않습니다. '
+      +'단원 공통(들머리·전체듣기·예시답안)은 늘 함께 새로 씁니다.</span>';
+    btn.textContent=got.length+'쪽 생성';
+  }else{
+    box.classList.add('all');
+    box.innerHTML='<b>'+unitLabel(u)+' 전체</b> 를 만듭니다.'
+      + (have?'<br><span class="muted">쪽을 고르면 그 쪽만 만듭니다.</span>':'');
+    btn.textContent=unitLabel(u)+' 전체 생성';
+  }
+}
+
+// ---------------------------------------------- 프로토
+function pLesson(){ const e=$('#sl_proto_lesson'); return e?e.value.trim():''; }
+function pOps(){ const e=$('#sl_proto_ops'); return e?e.value.trim():''; }
+
+async function loadProto(){
+  const n=pLesson();
+  if(!n){ log('프로토 단원을 적어 주세요 (예: 6).'); return; }
+  const r=await get('/api/proto?recipe='+R.id+'&lesson='+encodeURIComponent(n));
+  if(r.error){ log('프로토: '+r.error); }
+  const done=new Set(r.done||[]);
+  $('#ppages').innerHTML=(r.pages||[]).map(p=>
+      `<label><input type="checkbox" class="pp" value="${p}" ${
+        done.size===0||done.has(p)?'checked':''}> ${p}</label>`).join('')
+    || '<span class="muted">견본 쪽을 찾지 못했습니다</span>';
+  const pp=document.querySelectorAll('.pp'), ppon=document.querySelectorAll('.pp:checked');
+  if($('#ppall')) $('#ppall').checked = pp.length>0 && pp.length===ppon.length;
+  const n2=Object.keys(r.items||{}).length;
+  $('#pinfo').textContent = n2 ? '' : (r.ops? '아직 분석하지 않았습니다. 쪽을 고르고 [규칙 분석].' : '');
+  protoCard(r);
+}
+
+// 프로토 단원 칸이 비면 목록을 지우고, 값이 있으면 그 단원 쪽을 불러온다
+function protoChanged(){
+  if(pLesson()){ loadProto(); return; }
+  $('#ppages').innerHTML='<span class="muted">프로토 단원을 적으면 쪽이 나옵니다</span>';
+  $('#pinfo').textContent=''; $('#pcard').innerHTML='';
+  if($('#ppall')) $('#ppall').checked=false;
+}
+
+// 분석 결과 카드 — /api/proto 가 준 것만 쓴다. 따로 분석하지 않는다.
+function protoCard(r){
+  const box=$('#pcard'); if(!box) return;
+  const items=r.items||{};
+  const found=Object.keys(items).length;
+  if(!found){ box.innerHTML=''; return; }
+  const none=(r.noneKeys||[]).length, diff=(r.diffKeys||[]).length, made=(r.newKeys||[]).length;
+  const note=(r.notes||[]).length;
+  const row=(k,v,why)=>`<tr><td>${k}</td><td class="v">${v}</td></tr>`
+    + (why?`<tr><td class="why" colspan="2">${why}</td></tr>`:'');
+  box.innerHTML='<div class="card">'
+    + `<h4>분석 결과 — ${esc(r.lesson)}단원</h4>`
+    + `<p class="when">본 쪽 ${(r.done||[]).join(', ')||'-'}${r.made?' · '+esc(r.made):''}</p>`
+    + '<table>'
+    + row('찾은 규칙', found+'개')
+    + row('찾지 못한 규칙', none+'개', none?'HTML 에 나오지 않는 값 — 코드 값을 그대로 씁니다':'')
+    + (r.hasRules
+        ? row('지금 규칙과 다름', diff+'개', diff?'[이 규칙 쓰기] 를 누르면 이 값들이 바뀝니다':'')
+          + row('새로 생기는 규칙', made+'개')
+        : row('지금 쓰는 규칙', '없음', '아직 규칙을 쓴 적이 없습니다'))
+    + (note?row('확인할 것', note+'건', esc((r.notes||[]).join(' · '))):'')
+    + '</table>'
+    + '<div class="act"><button class="go" onclick="promote()">이 규칙 쓰기</button>'
+    + '<span class="muted" style="font-size:11px">누르면 rules.json 이 이 분석 결과로 바뀝니다</span></div>'
+    + '</div>';
+}
+
+function allPages(on){ document.querySelectorAll('.pp').forEach(e=>e.checked=!!on); }
+
+async function analyze(){
+  const n=pLesson();
+  if(!n){ log('프로토 단원을 적어 주세요.'); return; }
+  const pages=[...document.querySelectorAll('.pp:checked')].map(e=>e.value);
+  if(!pages.length){ log('견본으로 삼을 쪽을 고르세요.'); return; }
+  $('#state').textContent='분석 중…';
+  const r=await post('/api/analyze',{recipe:R.id,lesson:n,pages,ops:pOps()});
+  JOB=r.job; pollTask(()=>loadProto());
+}
+
+async function promote(){
+  const n=pLesson();
+  if(!n){ log('프로토 단원을 적어 주세요.'); return; }
+  if(!confirm(n+'단원 분석 결과를 rules.json 에 합칩니다.\n같은 규칙은 새 값으로 바뀌고, 이번에 안 본 예전 규칙은 그대로 둡니다.')) return;
+  $('#state').textContent='규칙 쓰는 중…';
+  const r=await post('/api/promote',{recipe:R.id,lesson:n});
+  JOB=r.job; pollTask(()=>loadProto());
+}
+
+async function compare(){
+  const r=await get('/api/compare?recipe='+R.id);
+  log(r.text||'');
+}
+
+async function regress(mode){
+  const units=pickedUnits();
+  if(mode==='save' && !units.length){ log('기준본으로 삼을 단원을 고르세요.'); return; }
+  $('#state').textContent='회귀 검사…';
+  const r=await post('/api/regress',{recipe:R.id,units,mode});
+  JOB=r.job; pollTask();
+}
+
+async function pollTask(after){
+  const j=await get('/api/job?id='+JOB);
+  log(j.log.join('\n'));
+  if(j.state==='running'){ setTimeout(()=>pollTask(after),600); return; }
+  $('#state').innerHTML = j.state==='done'
+    ? '<span class="ok">끝</span>' : '<span class="ng">오류</span>';
+  if(after) after();
+}
+
+async function browse(key){
+  const inp=$('#sl_'+key), box=inp.nextElementSibling;
+  const r=await get('/api/ls?path='+encodeURIComponent(inp.value||'.'));
+  box.style.display='block';
+  box.innerHTML=(r.up?`<div onclick="pick('${key}',${JSON.stringify(r.up).replace(/"/g,'&quot;')})">⬆ 상위</div>`:'')
+    + r.dirs.map(d=>`<div onclick="pick('${key}',${JSON.stringify((r.path+'\\\\'+d)).replace(/"/g,'&quot;')})">📁 ${d}</div>`).join('')
+    + r.files.map(f=>`<div class="f" onclick="setv('${key}',${JSON.stringify((r.path+'\\\\'+f)).replace(/"/g,'&quot;')})">📄 ${f}</div>`).join('');
+}
+function pick(k,p){ $('#sl_'+k).value=p; browse(k); }
+function setv(k,p){ $('#sl_'+k).value=p; $('#sl_'+k).nextElementSibling.style.display='none'; }
+
+async function saveSlots(){
+  const slots={}; R.slots.forEach(s=>{const v=$('#sl_'+s.key).value.trim(); if(v) slots[s.key]=v;});
+  await post('/api/settings',{recipe:R.id,slots});
+  await loadRecipe(R.id);
+  log('자료 경로를 저장했습니다.');
+}
+
+function devMode(on){ document.body.classList.toggle('devon',!!on); }
+
+function log(s){ $('#log').textContent=s; }
+
+async function run(){
+  const units=pickedUnits();
+  if(!units.length){ log('단원을 고르세요.'); return; }
+  const steps=[...document.querySelectorAll('.st:checked')].map(e=>e.value);
+  const pages=(units.length===1)?pickedPages():[];
+  $('#run').disabled=true;
+  $('#state').textContent = pages.length ? (pages.length+'쪽 생성…') : '도는 중…';
+  log((pages.length ? ('고른 쪽 '+pages.join(', ')) : (units.map(unitLabel).join(', ')+' 전체'))+' — 시작합니다…');
+  const r=await post('/api/run',{recipe:R.id,units,steps,pages:pages.length?pages:null});
+  JOB=r.job; poll();
+}
+
+async function poll(){
+  const j=await get('/api/job?id='+JOB);
+  log(j.log.join('\n'));
+  if(j.state==='running'){ setTimeout(poll,600); return; }
+  $('#run').disabled=false;
+  $('#state').innerHTML = j.state==='done'
+    ? (j.results.every(r=>r.ok)?'<span class="ok">끝</span>':'<span class="ng">확인 필요</span>')
+    : '<span class="ng">오류</span>';
+  const r=(j.results||[])[0];
+  if(r){ CUR.unit=r.unit; showFiles(r); loadBackups(); loadPages(); CFG=null;
+         if($('#cfg').style.display==='block') loadCfg(); }
+  else scopeInfo();
+}
+
+function showFiles(r){
+  const pv=r.preview;
+  // 옛 모양(목록)도 그대로 받는다
+  if(Array.isArray(pv)||!pv){ showFilesFlat(pv||[], r); return; }
+  const picked=pv.picked||[], common=pv.common||[], other=pv.other||[];
+  const first=picked[0]||common[0]||other[0]||null;
+  const link=(p,sub)=>`<a href="#" class="${sub?'sub ':''}${p===first?'on':''}"`
+    + ` title="${esc(p)}" onclick="open_(this,'${esc(p)}');return false">`
+    + `${sub?'└ ':''}${esc(p.split('/').pop())}</a>`;
+  // 쪽 바로 뒤에 그 쪽 팝업이 오도록 (page_files 가 그 차례로 준다)
+  const body=picked.map(p=>link(p, p.indexOf('/')>=0)).join('');
+  let h='';
+  h+='<span class="grp"><b>고른 쪽</b>'
+    + (body||'<span class="empty">없음</span>')+'</span>';
+  if(common.length)
+    h+='<span class="grp"><b>단원 공통</b>'+common.map(p=>link(p,false)).join('')+'</span>';
+  if(other.length)
+    h+=`<details class="grp"><summary>이 폴더의 다른 파일 (${other.length})</summary>`
+      + '<span>'+other.map(p=>link(p,false)).join('')+'</span></details>';
+  $('#files').innerHTML=h;
+  if(first) openPath(first);
+}
+
+function showFilesFlat(list, r){
+  const want=(r&&r.pages&&r.pages.length)?(r.pages[0]+'.html'):null;
+  const first=(want && list.indexOf(want)>=0) ? want : list[0];
+  $('#files').innerHTML=list.map(p=>
+    `<a href="#" class="${p===first?'on':''}" onclick="open_(this,'${p}');return false">${p}</a>`).join('');
+  if(first) openPath(first);
+}
+function open_(a,p){ document.querySelectorAll('#files a').forEach(x=>x.classList.remove('on'));
+  a.classList.add('on'); openPath(p); }
+function openPath(p){ $('#pv').src='/files/'+R.id+'/'+CUR.unit+'/ops/'+p.split('/').map(encodeURIComponent).join('/'); }
+
+async function loadBackups(){
+  if(!CUR.unit) return;
+  const r=await get('/api/backups?recipe='+R.id+'&unit='+CUR.unit);
+  $('#bk').innerHTML=(r.list||[]).map(n=>`<option>${n}</option>`).join('')
+    || '<option value="">(없음)</option>';
+}
+async function restore(){
+  const stamp=$('#bk').value;
+  if(!stamp || !CUR.unit){ log('되돌릴 백업이 없습니다.'); return; }
+  const r=await post('/api/restore',{recipe:R.id,unit:CUR.unit,stamp});
+  log('되돌림: '+CUR.unit+'단원 '+(r.n||0)+'개 — 미리보기를 새로고침하세요.');
+}
+
+// ---------------------------------------------- 설정 패널
+let CFG=null;
+
+function tab(which){
+  const pv=which==='pv';
+  $('#tab_pv').classList.toggle('on',pv); $('#tab_cfg').classList.toggle('on',!pv);
+  $('#pv').style.display = pv?'block':'none';
+  $('#cfg').style.display = pv?'none':'block';
+  if(!pv && !CFG) loadCfg();
+}
+
+function cfgUnit(){
+  if(CUR.unit) return CUR.unit;
+  return oneUnit() || '';
+}
+
+async function loadCfg(){
+  const unit=cfgUnit();
+  if(!unit){ $('#cfg').innerHTML='<p class="muted">단원을 고르세요.</p>'; return; }
+  $('#cfg').innerHTML='<p class="muted">읽는 중…</p>';
+  CFG=await get('/api/layout?recipe='+R.id+'&unit='+encodeURIComponent(unit));
+  renderCfg();
+}
+
+function esc(v){ return (v==null?'':String(v)).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderCfg(){
+  const d=CFG;
+  if(d.error){ $('#cfg').innerHTML='<p class="ng">'+esc(d.error)+'</p>'; return; }
+  const kinds=[['','(없음)'],['mic','마이크'],['speaker','말하는 이']];
+  let h='<h4>'+esc(d.unit)+'단원 쪽 손질 <span class="muted" style="font-weight:400">'
+      + esc(d.path.split(/[\\/]/).pop())+'</span></h4>';
+  h+='<div class="fld"><label>말하는 이 이름 (단원 공통 · CSS 로 문단 앞에 붙습니다)</label>'
+   + '<input class="t" id="c_speaker" style="max-width:280px" value="'+esc(d.speaker)+'"></div>';
+  if((d.dropped||[]).length){
+    h+='<div class="fld"><label>뺀 문장 — 지면에 그림으로 이미 있어 본문에서 지운 것</label><div class="sel">'
+     + d.dropped.map(x=>`<label><input type="checkbox" class="undrop" value="${x.num}/${x.seq}"> ${x.num}/${x.seq} 되살리기</label>`).join('')
+     + '</div></div>';
+  }
+  (d.pages||[]).forEach((pg,pi)=>{
+    h+=`<div class="pg" data-i="${pi}"><b>${esc(pg.page)}</b> <span class="muted">${esc(pg.num)}쪽</span>`;
+    h+=`<div class="fld"><label>문단 나눔 — 한 줄이 한 문단, 쉼표로 문장 번호</label>`
+     + `<textarea rows="${Math.max(2,pg.paras.length)}" class="c_paras">${esc(pg.paras.join('\n'))}</textarea></div>`;
+    h+='<div class="fld"><label>문단 첫머리</label><div class="sel">'
+     + Object.keys(pg.prefix).map(sq=>`<label>${sq} <select class="c_prefix" data-seq="${sq}">`
+        + kinds.map(k=>`<option value="${k[0]}" ${pg.prefix[sq]===k[0]?'selected':''}>${k[1]}</option>`).join('')
+        + '</select></label>').join('') + '</div></div>';
+    h+='<div class="fld"><label>문장 — 왼쪽은 지면 글자, 오른쪽은 해석. 고친 칸만 저장됩니다</label><table>'
+     + pg.sents.map(sn=>`<tr data-seq="${sn.seq}">`
+        + `<td class="n">${sn.seq}</td><td class="lead">${esc(sn.lead)}</td>`
+        + `<td><input class="t c_en${sn.over?' over':''}" value="${esc(sn.en)}"></td>`
+        + `<td><input class="t c_kr${sn.kr==='해석x'?' nokr':''}" value="${esc(sn.kr)}"></td></tr>`).join('')
+     + '</table></div>';
+    h+=`<div class="fld"><label>쪽 CSS — 문단 위치·너비·여백 (margin-top · width · margin-left)</label>`
+     + `<textarea rows="${Math.min(16,Math.max(4,(pg.css||'').split('\n').length))}" class="c_css">${esc(pg.css)}</textarea></div>`;
+    const im=Object.keys(pg.img||{}).map(k=>k+' '+pg.img[k].join('×')).join('   ');
+    if(im) h+='<div class="fld"><label>이미지 크기 (잰 값 · 읽기 전용)</label><div class="img">'+esc(im)+'</div></div>';
+    h+=`<div style="margin-top:10px"><button onclick="regen(['${pg.page}'])">이 쪽만 재생성</button></div>`;
+    h+='</div>';
+  });
+  h+='<div class="save"><button class="go" onclick="saveCfg()">손질 저장</button>'
+   + '<button onclick="loadCfg()">되읽기</button>'
+   + '<button onclick="regen(null)">단원 전체 재생성</button>'
+   + '<span class="muted" style="font-size:12px">저장은 layout 파일에만 씁니다. '
+   + '재생성해야 HTML 에 반영됩니다.</span></div>';
+  $('#cfg').innerHTML=h;
+}
+
+function cfgBody(){
+  const d=CFG, pages=[];
+  document.querySelectorAll('#cfg .pg').forEach(el=>{
+    const pg=d.pages[+el.dataset.i], prefix={};
+    el.querySelectorAll('.c_prefix').forEach(sl=>prefix[sl.dataset.seq]=sl.value);
+    const sents=[];
+    el.querySelectorAll('tr[data-seq]').forEach(tr=>{
+      const seq=tr.dataset.seq, was=pg.sents.find(x=>x.seq===seq);
+      const en=tr.querySelector('.c_en').value, kr=tr.querySelector('.c_kr').value;
+      sents.push({seq, en, kr, over: was.over || en!==was.en});
+    });
+    pages.push({num:pg.num, page:pg.page, prefix, sents,
+      paras: el.querySelector('.c_paras').value.split('\n').filter(x=>x.trim()),
+      css: el.querySelector('.c_css').value});
+  });
+  return {unit:d.unit, speaker:$('#c_speaker').value, pages,
+    undrop:[...document.querySelectorAll('.undrop:checked')].map(e=>e.value)};
+}
+
+async function saveCfg(){
+  const r=await post('/api/layout', cfgBody());
+  log(r.changed ? ('설정을 저장했습니다 — '+r.path+'\n백업: '+(r.backup||'없음')
+                   +'\n\n[이 쪽만 재생성] 을 눌러야 HTML 에 반영됩니다.')
+                : '바뀐 것이 없어 그대로 두었습니다.');
+  CFG=null; loadCfg();
+}
+
+async function regen(pages){
+  const unit=CFG?CFG.unit:cfgUnit();
+  if(!unit){ log('단원을 고르세요.'); return; }
+  const steps=[...document.querySelectorAll('.st:checked')].map(e=>e.value);
+  $('#state').textContent='재생성…';
+  const r=await post('/api/regen',{recipe:R.id,unit,pages,steps});
+  JOB=r.job; CUR.unit=unit;
+  pollTask(()=>{ if(pages&&pages.length) openPath(pages[0]+'.html'); loadBackups(); });
+}
+
+async function quit(){
+  if(!confirm('생성기를 끝낼까요?')) return;
+  try{ await post('/api/quit',{}); }catch(e){}
+  document.body.innerHTML='<p style="padding:40px;font-size:15px">끝났습니다. 이 창을 닫으세요.</p>';
+}
+
+boot();
+</script>
+</body></html>
+'''
