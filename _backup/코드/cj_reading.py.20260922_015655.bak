@@ -382,57 +382,24 @@ def verify(ctx, unit):
 
 # ------------------------------------------------- 프로토 (생성과 따로 도는 곳)
 def proto_ops(ctx):
-    """견본 페이지가 있는 폴더. 사용자가 고른 것만 본다.
-
-    단원 등록부(project_rules.json 에서 올라온 P.UNITS)에서 바로 ops 경로를 찾는다.
-    read_paths.ops() 의 'lesson%02d 폴더일 것이다' 식 폴백(단원 id 를 int 로 바꿔야
-    함)을 타지 않는다 — 문자열 단원 id(UnitA 등)에서도 그대로 동작해야 하기 때문이다.
-    """
+    """견본 페이지가 있는 폴더. 사용자가 고른 것만 본다."""
     v = ctx.get('proto_ops')
     if v:
         return v
     n = proto_lesson(ctx)
-    if not n:
-        return ''
-    import read_paths as P
-    return P.unit(n).get('ops') or ''
+    return out_dir(ctx, n) if n else ''
 
 
 def proto_lesson(ctx):
-    """프로토로 고른 단원 id. 문자열 그대로 돌려준다 — 숫자 단원만 되던 제약을 없앤다.
-
-    project_rules.json 의 prototype.units 에 적힌 id 만 고를 수 있다. 폴더를 다시
-    뒤져 추측하지 않는다 — 거기 없으면(오타 포함) None 을 돌려준다.
-    """
     v = str(ctx.get('proto_lesson') or '').strip()
-    if not v:
-        return None
-    import project_rules_io as PR
-    ids = {u.get('id') for u in PR.proto_units()}
-    return v if v in ids else None
+    return int(v) if v.isdigit() else None
 
 
 def proto_pages(ctx):
-    """고를 수 있는 견본 쪽 목록 — project_rules.json 의 prototype.units[].pages 가 기준.
-
-    폴더를 다시 훑어 후보를 임의로 늘리지 않는다(추측 금지). 폴더에 더 있어도
-    여기 없으면 화면에 보여주지 않는다 — 등록된 페이지만 보여준다는 원칙을 지킨다.
-    """
-    import project_rules_io as PR
-    n = proto_lesson(ctx)
-    if not n:
-        return []
-    return PR.proto_pages(n)
-
-
-def prototype_units(ctx):
-    """화면 드롭다운에 보여줄 '프로토로 고를 수 있는 단원 id' 목록.
-
-    project_rules.json 의 prototype.units 에 적힌 것만 — 폴더를 다시 뒤져 후보를
-    추측해서 늘리지 않는다.
-    """
-    import project_rules_io as PR
-    return [u['id'] for u in PR.proto_units() if u.get('id')]
+    """고를 수 있는 견본 쪽 목록."""
+    import proto_scan, project_rules_io as PR
+    pat = PR.pattern('pageFilename', proto_scan.PAGE_PATTERN_DEFAULT)
+    return proto_scan.pages_in(proto_ops(ctx), pattern=pat)
 
 
 def analyze(ctx, pages=None):
@@ -447,20 +414,8 @@ def analyze(ctx, pages=None):
     sb = P.storyboard(n) if os.path.isfile(P.storyboard(n)) else None
     snd = P.SND if os.path.isfile(P.SND) else None
     pat = PR.pattern('pageFilename', proto_scan.PAGE_PATTERN_DEFAULT)
-    # 음원 시트 이름 — 이 단원에 project_rules.json 이 적어 둔 값이 최우선(예전과 같은
-    # 우선순위, read_import.sound() 와 동일), 없으면 rules.json 의 sound.sheet.
-    # proto_scan.py 는 이제 이 값을 그대로 받아 쓰고, '%d과' 를 스스로 만들지 않는다.
-    sheet = P.unit(n).get('sheet') or ''
-    if not sheet:
-        import read_import
-        read_import.load_rules(ctx.recipe.ID)
-        sheet = read_import.R('sound.sheet', None)
-        if sheet and '%' in str(sheet) and str(n).isdigit():
-            sheet = sheet % int(n)
-        elif sheet and '%' in str(sheet):
-            sheet = None       # 단원 id 가 숫자가 아니면 '%d' 템플릿을 적용할 수 없다
     return proto_scan.scan(ctx.recipe.ID, n, ops, pages, sound_xlsx=snd, sb_xlsx=sb,
-                            page_pattern=pat, sound_sheet=sheet or None)
+                            page_pattern=pat)
 
 
 def preview(ctx, unit):

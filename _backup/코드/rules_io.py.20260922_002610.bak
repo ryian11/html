@@ -52,20 +52,6 @@ def load(path):
     return json.loads(io.open(path, encoding='utf-8').read())
 
 
-def values(rid):
-    """rules.json 의 item→value 만 뽑아 돌려준다. 없으면 빈 dict.
-
-    read_gen.py 의 load_rules() 와 read_import.py 의 load_rules() 가
-    똑같은 모양으로 이 함수를 쓴다 — rules.json 을 읽는 곳을 한 곳으로 모은다.
-    """
-    d = load(rules_path(rid)) if rid else None
-    out = {}
-    for k, v in (d.get('items') or {}).items() if d else []:
-        if isinstance(v, dict) and v.get('value') is not None:
-            out[k] = v['value']
-    return out
-
-
 def save(d, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     d['made'] = time.strftime('%Y-%m-%d %H:%M')
@@ -185,16 +171,15 @@ def code_rules(rid='cj_reading'):
     m = re.search(r"IDPAT = re\.compile\(r'([^']+)'\)", imp)
     if m:
         put(d, 'sound.idPattern', m.group(1), 'code')
-    # read_import.py 가 R('key', 기본값) 으로 쓰는 자리는 모두 이렇게 훑는다.
-    # (sound.sheet / sound.col.id / sound.col.text / sound.mp3 / storyboard.sheet.syntax 등
-    #  — read_import.py 에 R() 호출이 새로 생겨도 여기 코드를 매번 고치지 않아도 된다)
-    import ast as _ast
-    for mk, mv in re.findall(r"R\(\s*'([\w.]+)'\s*,\s*(\{[^}]*\}|'[^']*'|\d+)\s*\)", imp):
-        try:
-            val = _ast.literal_eval(mv)
-        except Exception:
-            continue
-        put(d, mk, val, 'code')
+    if re.search(r"replace\('-', '_'\).*?\.lower\(\)", imp, re.S):
+        put(d, 'sound.mp3', {'sep': '_', 'case': 'lower'}, 'code')
+    m = re.search(r"sheet = '(%d과)'", imp)
+    if m:
+        put(d, 'sound.sheet', m.group(1), 'code')
+    m = re.search(r"fid, txt = str\(r\[(\d+)\].*?norm\(r\[(\d+)\]\)", imp)
+    if m:
+        put(d, 'sound.col.id', int(m.group(1)), 'code')
+        put(d, 'sound.col.text', int(m.group(2)), 'code')
 
     # --- 소스에서: 생성기가 실제로 여는 스토리보드 시트
     for name in re.findall(r"data_only=True\)\['([^']+)'\]", imp) + \

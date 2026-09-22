@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""proto_scan.py 패치 — 페이지 파일명 규칙을 project_rules.json 에서 받을 수 있게."""
+import sys, io
+
+PATH = sys.argv[1]
+src = io.open(PATH, encoding='utf-8').read()
+
+
+def apply(old, new, label):
+    global src
+    n = src.count(old)
+    if n != 1:
+        raise SystemExit('[실패] %s — old 블록이 %d번 나타남(1이어야 함)' % (label, n))
+    src = src.replace(old, new, 1)
+    print('[적용] %s' % label)
+
+
+OLD_PAGES_IN = """def pages_in(ops):
+    \"\"\"프로토 ops 폴더에 있는 본문 페이지 이름. 고를 거리를 보여 주려는 것뿐.\"\"\"
+    if not os.path.isdir(ops):
+        return []
+    out = []
+    for f in sorted(os.listdir(ops)):
+        m = re.match(r'^(p\\d{3}_\\d{2})\\.html$', f)
+        if m:
+            out.append(m.group(1))
+    return out"""
+
+NEW_PAGES_IN = """# project_rules.json 의 patterns.pageFilename 이 없을 때 쓰는 기본값
+# (지금까지 CJ 프로젝트에 써 온 'p001_01' 모양).
+PAGE_PATTERN_DEFAULT = r'^(p\\d{3}_\\d{2})\\.html$'
+
+
+def pages_in(ops, pattern=None):
+    \"\"\"프로토 ops 폴더에 있는 본문 페이지 이름. 고를 거리를 보여 주려는 것뿐.
+
+    pattern 을 안 주면 지금까지 CJ 프로젝트에 써 온 페이지 이름 규칙을 쓴다.
+    다른 프로젝트는 project_rules.json 의 patterns.pageFilename 을 통해 다른
+    규칙을 줄 수 있다.
+    \"\"\"
+    if not os.path.isdir(ops):
+        return []
+    pat = re.compile(pattern or PAGE_PATTERN_DEFAULT)
+    out = []
+    for f in sorted(os.listdir(ops)):
+        m = pat.match(f)
+        if m:
+            out.append(m.group(1))
+    return out"""
+
+apply(OLD_PAGES_IN, NEW_PAGES_IN, 'pages_in()')
+
+
+OLD_SCAN_SIG = """def scan(rid, lesson, ops, pages, sound_xlsx=None, sb_xlsx=None, write=True):
+    \"\"\"고른 페이지만 읽어 proto_L<N>.json 을 만든다.
+
+    write=False 면 파일로 쓰지 않고 dict 만 돌려준다 (대조할 때 쓴다).
+    \"\"\"
+    if not os.path.isdir(ops):
+        raise RuntimeError('프로토 ops 폴더를 찾지 못했습니다: %s' % ops)
+    pages = list(pages or [])
+    if not pages:
+        pages = pages_in(ops)"""
+
+NEW_SCAN_SIG = """def scan(rid, lesson, ops, pages, sound_xlsx=None, sb_xlsx=None, write=True, page_pattern=None):
+    \"\"\"고른 페이지만 읽어 proto_L<N>.json 을 만든다.
+
+    write=False 면 파일로 쓰지 않고 dict 만 돌려준다 (대조할 때 쓴다).
+    page_pattern 을 주면(project_rules.json 의 patterns.pageFilename) 페이지
+    목록을 새로 훑을 때(pages 를 안 골랐을 때만) 그 규칙을 쓴다.
+    \"\"\"
+    if not os.path.isdir(ops):
+        raise RuntimeError('프로토 ops 폴더를 찾지 못했습니다: %s' % ops)
+    pages = list(pages or [])
+    if not pages:
+        pages = pages_in(ops, pattern=page_pattern)"""
+
+apply(OLD_SCAN_SIG, NEW_SCAN_SIG, 'scan() 시그니처')
+
+io.open(PATH, 'w', encoding='utf-8', newline='').write(src)
+print('저장 완료:', PATH)

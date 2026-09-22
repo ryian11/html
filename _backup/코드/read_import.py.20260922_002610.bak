@@ -19,36 +19,8 @@
 """
 import os, re, sys, struct, unicodedata
 import read_paths as P
-import rules_io
 
 WARN = []
-
-# ------------------------------------------------------------ rules.json 연결
-# read_gen.py 의 load_rules()/R() 과 같은 모양이다 — 없으면 지금까지 쓰던 값
-# (default) 그대로 돌려주고, 무엇이 없었는지만 적어 둔다. 그래서 rules.json 이
-# 아직 비어 있어도(또는 이 키가 없어도) 추출 결과는 지금까지와 같다.
-RULES = {}
-MISSED = []
-
-
-def load_rules(rid):
-    global RULES
-    RULES = rules_io.values(rid) if rid else {}
-    del MISSED[:]
-    return RULES
-
-
-def R(key, default):
-    v = RULES.get(key)
-    if v is None:
-        if key not in MISSED:
-            MISSED.append(key)
-        return default
-    return v
-
-
-def missed_rules():
-    return list(MISSED)
 
 
 def warn(m):
@@ -58,10 +30,7 @@ def warn(m):
 # ------------------------------------------------------------------ 공통
 def mp3name(sheet_id):
     """시트 파일명 → mp3 이름.  '3-125-Read-07-1' → '3_125_read_07_1'"""
-    cfg = R('sound.mp3', {'sep': '_', 'case': 'lower'}) or {}
-    sep = cfg.get('sep', '_')
-    s = sheet_id.strip().replace('-', sep).replace(' ', sep)
-    return s.lower() if cfg.get('case', 'lower') == 'lower' else s
+    return sheet_id.strip().replace('-', '_').replace(' ', '_').lower()
 
 
 def norm(s):
@@ -117,27 +86,18 @@ IDPAT = re.compile(r'^\d+-(\d{3})-(.+?)-(\d+(?:-\d+)*)$')
 
 
 def sound(n):
-    """<N>과 시트 → (쪽 차례, {쪽: {코너: [(seq, 글, 파일명), ...]}})
-
-    시트 이름·열 자리·ID 모양은 rules.json 에 있으면 그 값을, 없으면 지금까지
-    코드에 있던 기본값(IDPAT 등)을 그대로 쓴다 — 그래서 rules.json 이 비어
-    있어도 결과가 달라지지 않는다. project.json/project_rules.json 이 단원별로
-    정해 둔 시트 이름(P.unit(n)['sheet'])이 있으면 그게 항상 우선이다(예전과 같다).
-    """
+    """<N>과 시트 → (쪽 차례, {쪽: {코너: [(seq, 글, 파일명), ...]}})"""
     import openpyxl
     wb = openpyxl.load_workbook(P.SND, data_only=True, read_only=True)
-    sheet = P.unit(n).get('sheet') or (R('sound.sheet', '%d과') % int(n))
+    sheet = P.unit(n).get('sheet') or ('%d과' % int(n))
     if sheet not in wb.sheetnames:
         raise SystemExit('녹음 대본에 %s 시트가 없습니다' % sheet)
-    idcol = R('sound.col.id', 2)
-    txtcol = R('sound.col.text', 1)
-    idpat = re.compile(R('sound.idPattern', IDPAT.pattern))
     pages, order = {}, []
     for r in wb[sheet].iter_rows(values_only=True):
-        fid, txt = str(r[idcol] or '').strip(), norm(r[txtcol])
+        fid, txt = str(r[2] or '').strip(), norm(r[1])
         if not fid or not txt:
             continue
-        m = idpat.match(fid)
+        m = IDPAT.match(fid)
         if not m:
             continue
         pg, corner, seq = m.group(1), m.group(2), m.group(3)
@@ -156,8 +116,7 @@ def sound(n):
 def syntax_sentences(n):
     """구문 해설 시트 → {쪽: [교과서 문장, ...]}  (차례 = |n| 번호)"""
     import openpyxl
-    sheet = R('storyboard.sheet.syntax', '구문 해설')
-    ws = openpyxl.load_workbook(P.storyboard(n), data_only=True)[sheet]
+    ws = openpyxl.load_workbook(P.storyboard(n), data_only=True)['구문 해설']
     out = {}
     for i, r in enumerate(ws.iter_rows(values_only=True), 1):
         if i == 1 or not r[0] or not r[1]:

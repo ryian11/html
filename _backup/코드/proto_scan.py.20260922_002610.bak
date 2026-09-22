@@ -21,24 +21,13 @@ if HERE not in sys.path:
 import rules_io
 
 
-# project_rules.json 의 patterns.pageFilename 이 없을 때 쓰는 기본값
-# (지금까지 CJ 프로젝트에 써 온 'p001_01' 모양).
-PAGE_PATTERN_DEFAULT = r'^(p\d{3}_\d{2})\.html$'
-
-
-def pages_in(ops, pattern=None):
-    """프로토 ops 폴더에 있는 본문 페이지 이름. 고를 거리를 보여 주려는 것뿐.
-
-    pattern 을 안 주면 지금까지 CJ 프로젝트에 써 온 페이지 이름 규칙을 쓴다.
-    다른 프로젝트는 project_rules.json 의 patterns.pageFilename 을 통해 다른
-    규칙을 줄 수 있다.
-    """
+def pages_in(ops):
+    """프로토 ops 폴더에 있는 본문 페이지 이름. 고를 거리를 보여 주려는 것뿐."""
     if not os.path.isdir(ops):
         return []
-    pat = re.compile(pattern or PAGE_PATTERN_DEFAULT)
     out = []
     for f in sorted(os.listdir(ops)):
-        m = pat.match(f)
+        m = re.match(r'^(p\d{3}_\d{2})\.html$', f)
         if m:
             out.append(m.group(1))
     return out
@@ -89,28 +78,15 @@ def scan_css(css):
 
 
 # ---------------------------------------------------------------- 자료 시트
-def scan_sound(xlsx, lesson, sheet=None):
-    """지정한 음원 엑셀에서 그 과 시트만 본다. 열 자리와 ID 모양을 확인한다.
-
-    sheet 를 주면(project_rules.json 의 단원별 sheet, 또는 rules.json 의 sound.sheet
-    를 호출하는 쪽이 미리 구해 건네준 값) 그 이름을 그대로 쓴다. 시트 이름을
-    여기서 스스로 짐작하지 않는다 — project_rules.json/rules.json 에 없고 단원 id 도
-    숫자가 아니면, 알 수 없다고 정직하게 오류로 알린다(추측해서 계속 진행하지 않는다).
-    """
+def scan_sound(xlsx, lesson):
+    """지정한 음원 엑셀에서 그 과 시트만 본다. 열 자리와 ID 모양을 확인한다."""
     import openpyxl
     out = {'sheet': '', 'colId': None, 'colText': None, 'ids': [], 'corner': []}
     if not xlsx or not os.path.isfile(xlsx):
         out['error'] = '음원 엑셀을 찾지 못했습니다'
         return out
-    want = sheet
-    if not want:
-        s = str(lesson)
-        if not s.isdigit():
-            out['error'] = ('시트 이름을 모릅니다 — project_rules.json 의 units[].sheet '
-                            '(또는 rules.json 의 sound.sheet) 를 채워주세요. (단원: %s)' % lesson)
-            return out
-        want = '%d과' % int(s)
     wb = openpyxl.load_workbook(xlsx, data_only=True, read_only=True)
+    want = '%d과' % int(lesson)
     if want not in wb.sheetnames:
         out['error'] = '%s 시트가 없습니다' % want
         return out
@@ -158,21 +134,16 @@ def scan_storyboard(xlsx):
 
 
 # ---------------------------------------------------------------- 모으기
-def scan(rid, lesson, ops, pages, sound_xlsx=None, sb_xlsx=None, write=True, page_pattern=None,
-         sound_sheet=None):
+def scan(rid, lesson, ops, pages, sound_xlsx=None, sb_xlsx=None, write=True):
     """고른 페이지만 읽어 proto_L<N>.json 을 만든다.
 
     write=False 면 파일로 쓰지 않고 dict 만 돌려준다 (대조할 때 쓴다).
-    page_pattern 을 주면(project_rules.json 의 patterns.pageFilename) 페이지
-    목록을 새로 훑을 때(pages 를 안 골랐을 때만) 그 규칙을 쓴다.
-    sound_sheet 를 주면(호출하는 쪽이 project_rules.json/rules.json 에서 미리 구한
-    시트 이름) scan_sound() 가 그 값을 그대로 쓴다 — 여기서 '%d과' 를 스스로 만들지 않는다.
     """
     if not os.path.isdir(ops):
         raise RuntimeError('프로토 ops 폴더를 찾지 못했습니다: %s' % ops)
     pages = list(pages or [])
     if not pages:
-        pages = pages_in(ops, pattern=page_pattern)
+        pages = pages_in(ops)
     if not pages:
         raise RuntimeError('프로토 페이지가 없습니다: %s' % ops)
 
@@ -273,17 +244,11 @@ def scan(rid, lesson, ops, pages, sound_xlsx=None, sb_xlsx=None, write=True, pag
             rules_io.put(d, 'assets.vtt', re.sub(r'l%s_' % ln, 'l{lesson}_', v), 'html')
 
     # --- 음원 엑셀
-    snd = scan_sound(sound_xlsx, lesson, sheet=sound_sheet)
+    snd = scan_sound(sound_xlsx, lesson)
     if snd.get('error'):
         notes.append('음원 엑셀: %s' % snd['error'])
     else:
-        # '%d과' 는 단원 id 가 숫자일 때만 뜻이 있는 템플릿이다 — 문자열 단원에
-        # 대해서는 항상 맞다고 할 수 없는 값이라 규칙으로 적어 두지 않는다.
-        if str(lesson).isdigit():
-            rules_io.put(d, 'sound.sheet', '%d과', 'xlsx', '본 것: %s' % snd['sheet'])
-        else:
-            notes.append("sound.sheet 템플릿은 단원 id 가 숫자가 아니라 적어 두지 않았습니다"
-                         " — 단원별 sheet 값(project_rules.json)을 그대로 씁니다")
+        rules_io.put(d, 'sound.sheet', '%d과', 'xlsx', '본 것: %s' % snd['sheet'])
         rules_io.put(d, 'sound.col.id', snd['colId'], 'xlsx')
         rules_io.put(d, 'sound.col.text', snd['colText'], 'xlsx')
         if snd['corner']:

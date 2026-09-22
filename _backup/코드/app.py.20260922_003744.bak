@@ -265,9 +265,9 @@ class H(BaseHTTPRequestHandler):
                                 body.get('pages') or None)
                 return self._send(200, {'job': jid})
             if u.path == '/api/project':
-                import project_rules_io as PR
+                import project_io
                 rid = body['recipe']
-                cur = {x['id']: x for x in PR.units()}
+                cur = {x['id']: x for x in project_io.units(rid)}
                 n = 0
                 for e in (body.get('units') or []):
                     row = cur.get(e.get('id'))
@@ -283,7 +283,7 @@ class H(BaseHTTPRequestHandler):
                             elif k in row:
                                 row.pop(k)
                                 n += 1
-                PR.put_units([cur[k] for k in sorted(
+                project_io.put_units(rid, [cur[k] for k in sorted(
                     cur, key=lambda i: (0, int(i), '') if i.isdigit() else (1, 0, i))])
                 runner.load_recipe(rid)          # 등록부를 다시 올린다
                 return self._send(200, {'ok': True, 'changed': n})
@@ -402,23 +402,17 @@ class H(BaseHTTPRequestHandler):
             labels = m.unit_labels(ctx) if hasattr(m, 'unit_labels') else {}
         except Exception:
             labels = {}
-        try:
-            proto_units = ([str(x) for x in m.prototype_units(ctx)]
-                           if hasattr(m, 'prototype_units') else [])
-        except Exception:
-            proto_units = []
         return {'id': rid, 'name': getattr(m, 'NAME', rid), 'unitLabels': labels,
                 'slots': [{'key': s[0], 'label': s[1], 'kind': s[2],
                            'optional': bool(len(s) > 3 and s[3].get('optional')),
                            'hint': (s[3].get('hint', '') if len(s) > 3 else ''),
                            'value': slots.get(s[0], '')} for s in getattr(m, 'SLOTS', [])],
                 'units': units,
-                'protoUnits': proto_units,
                 'edit': [{'path': a, 'ui': b} for a, b in getattr(m, 'EDIT', [])]}
 
     def _project(self, rid):
         """단원별 자료 — 시트 이름 · 지도서 PDF 는 교재마다 다르다."""
-        import project_rules_io as PR
+        import project_io
         m = runner.load_recipe(rid)
         ctx = runner.make_ctx(m, runner.load_settings().get(rid, {}))
         try:
@@ -427,8 +421,8 @@ class H(BaseHTTPRequestHandler):
             pass
         import read_paths as P
         out = []
-        for u in PR.units():
-            g = PR.abspath(P.ROOT, u.get('guide', ''))
+        for u in project_io.units(rid):
+            g = project_io.abspath(P.ROOT, u.get('guide', ''))
             out.append({'id': u['id'], 'name': u.get('name', u['id']),
                         'sheet': u.get('sheet', ''), 'guide': u.get('guide', ''),
                         'guideOk': bool(u.get('guide')) and os.path.isfile(g),

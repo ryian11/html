@@ -402,18 +402,12 @@ class H(BaseHTTPRequestHandler):
             labels = m.unit_labels(ctx) if hasattr(m, 'unit_labels') else {}
         except Exception:
             labels = {}
-        try:
-            proto_units = ([str(x) for x in m.prototype_units(ctx)]
-                           if hasattr(m, 'prototype_units') else [])
-        except Exception:
-            proto_units = []
         return {'id': rid, 'name': getattr(m, 'NAME', rid), 'unitLabels': labels,
                 'slots': [{'key': s[0], 'label': s[1], 'kind': s[2],
                            'optional': bool(len(s) > 3 and s[3].get('optional')),
                            'hint': (s[3].get('hint', '') if len(s) > 3 else ''),
                            'value': slots.get(s[0], '')} for s in getattr(m, 'SLOTS', [])],
                 'units': units,
-                'protoUnits': proto_units,
                 'edit': [{'path': a, 'ui': b} for a, b in getattr(m, 'EDIT', [])]}
 
     def _project(self, rid):

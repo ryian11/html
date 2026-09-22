@@ -1,10 +1,4 @@
 {
- "from": {
-  "lesson": "3",
-  "pages": [
-   "p050_02"
-  ]
- },
  "items": {
   "assets.bg": {
    "source": "css",
@@ -26,10 +20,6 @@
    "source": "html",
    "value": "media/mp4/l{lesson}_read.vtt"
   },
-  "info.img.line": {
-   "source": "css",
-   "value": "images/{page}/line.png"
-  },
   "info.img.title_b": {
    "source": "css",
    "value": "images/{page}/title_b.png"
@@ -43,7 +33,7 @@
    "source": "html",
    "value": {
     "body": [
-     "p050_02"
+     "p152_03"
     ]
    }
   },
@@ -62,10 +52,6 @@
    "source": "none",
    "value": null
   },
-  "popup.btn.dictationBtn": {
-   "source": "html",
-   "value": 4
-  },
   "popup.btn.korBtn": {
    "source": "html",
    "value": 3
@@ -74,18 +60,9 @@
    "source": "html",
    "value": 2
   },
-  "popup.btn.questionBtn": {
-   "source": "html",
-   "value": 7
-  },
   "popup.btn.videoPopBtn": {
    "source": "html",
    "value": 1
-  },
-  "popup.quiz.other": {
-   "note": "고른 1쪽이 모두 7 — 마지막 쪽을 함께 골라야 예외가 보입니다",
-   "source": "html",
-   "value": 7
   },
   "popup.video": {
    "source": "html",
@@ -132,57 +109,29 @@
   "sound.corner": {
    "source": "xlsx",
    "value": [
-    "Study Points",
-    "Self-Check",
-    "IWL",
-    "Warm-Up",
-    "Listen-Smart",
-    "LnT-A",
-    "Word-A",
-    "LnT-B",
-    "LnT-C",
-    "EtC-A",
-    "EtC-B",
-    "Sounds",
     "BWR-A",
-    "BWR-B",
-    "Read-Smart",
+    "BWR-ex",
     "Read",
-    "Question",
     "Word",
-    "Think-about-This",
-    "Mission",
     "AWR-A",
-    "AWR-B",
-    "AWR-C",
-    "Beyond",
-    "FoL-A",
-    "FoL-B"
+    "Project",
+    "Project-ex"
    ]
   },
   "sound.idPattern": {
-   "note": "ID 375개 중 375개가 이 모양",
+   "note": "ID 113개 중 113개가 이 모양",
    "source": "xlsx",
    "value": "^\\d+-(\\d{3})-(.+?)-(\\d+(?:-\\d+)*)$"
   },
   "sound.mp3": {
-   "note": "페이지 mp3 13개 중 13개가 시트 ID 와 맞음",
+   "note": "페이지 mp3 7개 중 7개가 시트 ID 와 맞음",
    "source": "xlsx",
    "value": {
     "case": "lower",
     "sep": "_"
    }
   },
-  "sound.sheet": {
-   "note": "본 것: 3과",
-   "source": "xlsx",
-   "value": "%d과"
-  },
-  "storyboard.sheet.Dictation": {
-   "source": "xlsx",
-   "value": true
-  },
-  "storyboard.sheet.Lesson 3_전자저작물용 지시문 모음": {
+  "storyboard.sheet.Special Lesson_전자저작물용 지시문 모음": {
    "source": "xlsx",
    "value": true
   },
@@ -195,8 +144,18 @@
    "value": true
   }
  },
- "kind": "rules",
- "made": "2026-09-21 16:26",
+ "kind": "proto",
+ "made": "2026-09-22 01:58",
+ "notes": [
+  "sound.sheet 템플릿은 단원 id 가 숫자가 아니라 적어 두지 않았습니다 — 단원별 sheet 값(project_rules.json)을 그대로 씁니다"
+ ],
+ "proto": {
+  "lesson": "special_lesson",
+  "ops": "/sessions/rcw-01ugds2gmjl7ze6nfm4ezz9b/mnt/2026_cj_midd3_eng/00_개발물/EBOOK/중학교 영어 3_소영순/app/resource/contents/special_lesson/ops",
+  "pages": [
+   "p152_03"
+  ]
+ },
  "recipe": "cj_reading",
  "schema": 1
 }

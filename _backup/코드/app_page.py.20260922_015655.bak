@@ -143,7 +143,7 @@ body.devon .dev{display:block}
     <label class="allchk" style="margin-left:auto"><input type="checkbox" id="ppall"
       onchange="allPages(this.checked)"> 전체</label>
   </div>
-  <div class="units" id="ppages"><span class="muted">프로토 단원을 고르면 쪽이 나옵니다</span></div>
+  <div class="units" id="ppages"><span class="muted">프로토 단원을 적으면 쪽이 나옵니다</span></div>
   <div style="margin-top:8px"><button onclick="analyze()">규칙 분석</button></div>
   <p class="muted" id="pinfo" style="font-size:12px;margin:7px 0 0"></p>
   <div id="pcard"></div>
@@ -237,7 +237,7 @@ async function loadRecipe(id){
   R=await get('/api/recipe/'+id);
   $('#rname').textContent=R.name;
   const dat=R.slots.filter(s=>!s.key.startsWith('proto_'));
-  const pro=R.slots.filter(s=>s.key.startsWith('proto_') && s.key!=='proto_lesson');
+  const pro=R.slots.filter(s=>s.key.startsWith('proto_'));
   const slotHtml=s=>`
     <div class="slot">
       <label>${s.label}${s.optional?' <span class="opt">(선택)</span>':''}</label>
@@ -249,26 +249,22 @@ async function loadRecipe(id){
     </div>`;
   $('#slots').innerHTML=dat.filter(s=>s.key==='root').map(slotHtml).join('');
   $('#slots_opt').innerHTML=dat.filter(s=>s.key!=='root').map(slotHtml).join('');
+  $('#pslots').innerHTML=pro.filter(s=>s.key==='proto_lesson').map(slotHtml).join('');
+  $('#devslots').innerHTML=pro.filter(s=>s.key!=='proto_lesson').map(slotHtml).join('');
   const lab=u=>(R.unitLabels&&R.unitLabels[u])||(/^\d+$/.test(u)?u+'단원':u);
-  // 프로토 단원 — project_rules.json 의 prototype.units 에 등록된 것만 고를 수 있다.
-  // (예전에는 자유 입력이라 아무 번호나 타이핑할 수 있었다 — 이제는 드롭다운)
-  const pu=R.protoUnits||[];
-  $('#pslots').innerHTML = '<div class="slot"><label>프로토 단원</label>'
-    + '<select id="sl_proto_lesson" onchange="protoChanged()">'
-    + '<option value="">— 프로토 단원 고르기 —</option>'
-    + pu.map(u=>`<option value="${u}">${lab(u)}</option>`).join('')
-    + '</select>'
-    + (pu.length?'':'<p class="muted" style="font-size:11px;margin:4px 0 0">project_rules.json 의 prototype.units 에 등록된 단원이 없습니다.</p>')
-    + '</div>';
-  $('#devslots').innerHTML=pro.map(slotHtml).join('');
   $('#unit').innerHTML='<option value="">— 단원 고르기 —</option>'
     + R.units.map(u=>`<option value="${u}">${lab(u)}</option>`).join('');
   $('#units').innerHTML=R.units.map(u=>`<label><input type="checkbox" class="u" value="${u}" onchange="multiPicked()"> ${lab(u)}</label>`).join('')
     || '<span class="muted">자료 경로를 먼저 정하세요</span>';
   $('#pinfo').textContent='';
   $('#pcard').innerHTML='';
-  SEL={}; PJ=null;
+  // 프로토 단원을 적거나 바꾸면 견본 쪽이 저절로 나온다 (기존 loadProto 재사용)
   const pl=$('#sl_proto_lesson');
+  if(pl){
+    pl.onchange=()=>protoChanged();
+    pl.onkeyup=e=>{ if(e.key==='Enter'){ e.target.blur(); protoChanged(); } };
+  }
+  SEL={}; PJ=null;
   if(pl && pl.value.trim()) loadProto();
   if($('#pjbox').open) loadProject();
   $('#pages').innerHTML='<span class="muted">단원을 고르세요</span>';
@@ -412,7 +408,7 @@ function pOps(){ const e=$('#sl_proto_ops'); return e?e.value.trim():''; }
 
 async function loadProto(){
   const n=pLesson();
-  if(!n){ log('프로토 단원을 골라 주세요.'); return; }
+  if(!n){ log('프로토 단원을 적어 주세요 (예: 6).'); return; }
   const r=await get('/api/proto?recipe='+R.id+'&lesson='+encodeURIComponent(n));
   if(r.error){ log('프로토: '+r.error); }
   const done=new Set(r.done||[]);
@@ -430,7 +426,7 @@ async function loadProto(){
 // 프로토 단원 칸이 비면 목록을 지우고, 값이 있으면 그 단원 쪽을 불러온다
 function protoChanged(){
   if(pLesson()){ loadProto(); return; }
-  $('#ppages').innerHTML='<span class="muted">프로토 단원을 고르면 쪽이 나옵니다</span>';
+  $('#ppages').innerHTML='<span class="muted">프로토 단원을 적으면 쪽이 나옵니다</span>';
   $('#pinfo').textContent=''; $('#pcard').innerHTML='';
   if($('#ppall')) $('#ppall').checked=false;
 }
@@ -466,7 +462,7 @@ function allPages(on){ document.querySelectorAll('.pp').forEach(e=>e.checked=!!o
 
 async function analyze(){
   const n=pLesson();
-  if(!n){ log('프로토 단원을 골라 주세요.'); return; }
+  if(!n){ log('프로토 단원을 적어 주세요.'); return; }
   const pages=[...document.querySelectorAll('.pp:checked')].map(e=>e.value);
   if(!pages.length){ log('견본으로 삼을 쪽을 고르세요.'); return; }
   $('#state').textContent='분석 중…';
@@ -476,7 +472,7 @@ async function analyze(){
 
 async function promote(){
   const n=pLesson();
-  if(!n){ log('프로토 단원을 골라 주세요.'); return; }
+  if(!n){ log('프로토 단원을 적어 주세요.'); return; }
   if(!confirm(n+'단원 분석 결과를 rules.json 에 합칩니다.\n같은 규칙은 새 값으로 바뀌고, 이번에 안 본 예전 규칙은 그대로 둡니다.')) return;
   $('#state').textContent='규칙 쓰는 중…';
   const r=await post('/api/promote',{recipe:R.id,lesson:n});
