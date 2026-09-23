@@ -156,7 +156,11 @@ def sound(n):
 def syntax_sentences(n):
     """구문 해설 시트 → {쪽: [교과서 문장, ...]}  (차례 = |n| 번호)"""
     import openpyxl
-    sheet = R('storyboard.sheet.syntax', '구문 해설')
+    # project_rules.json 의 patterns.storyboardSheets.syntax 가 최우선(프로젝트마다
+    # 시트 이름이 다를 수 있다). rules.json 의 storyboard.sheet.syntax 는 지금까지
+    # 아무 데서도 채워진 적이 없는 이름이라 사실상 항상 기본값으로 빠졌던 자리다 —
+    # 그 자리는 그대로 두고(하위 호환), 그 앞에 프로젝트별 값을 먼저 본다.
+    sheet = P.STORYBOARD_SHEETS.get('syntax') or R('storyboard.sheet.syntax', '구문 해설')
     ws = openpyxl.load_workbook(P.storyboard(n), data_only=True)[sheet]
     out = {}
     for i, r in enumerate(ws.iter_rows(values_only=True), 1):

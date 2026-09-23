@@ -57,18 +57,26 @@ LEGACY_PATTERNS = {
 
 
 def setup(ctx):
-    """project_rules.json 을 프로젝트 구조의 기준으로 삼아 read_paths 에 꽂는다.
+    """project_rules.json(프로젝트 root 바로 아래)을 프로젝트 구조의 기준으로 삼아
+    read_paths 에 꽂는다.
 
     project_rules.json 이 없으면(첫 실행) 지금까지 코드에 박혀 있던 값 그대로
     한 번 만들어 두고(ensure_migrated), 있으면 그 값을 읽는다. UI 슬롯
     (script_xlsx 등)이 있으면 그 값이 항상 마지막에 이긴다 — 예전과 같다.
     `GEN`(생성기 자기 위치)은 자료가 아니라서 JSON 에 넣지 않고 그대로 계산한다.
+
+    project_rules_io.set_root() 를 매번 다시 불러서 이번 요청의 root 로 맞춘다 —
+    그래야 프로젝트 A 를 보던 중에 프로젝트 B 를 열어도 project_rules.json 이
+    섞이지 않는다. root 가 없거나 실제 폴더가 아니면(프로젝트 미선택) 이전 요청의
+    값이 남아 다른 프로젝트로 새지 않도록 read_paths 쪽 값도 함께 비운다.
     """
     import read_paths as P
     import project_rules_io as PR
     root = ctx.get('root')
     rid = getattr(ctx.recipe, 'ID', 'cj_reading')
-    if root and os.path.isdir(root):
+    ok_root = bool(root) and os.path.isdir(root)
+    PR.set_root(root if ok_root else None)
+    if ok_root:
         P.ROOT = root
         pr, _made = PR.ensure_migrated(rid, root,
                                         {'paths': LEGACY_PATHS, 'patterns': LEGACY_PATTERNS})
@@ -78,9 +86,15 @@ def setup(ctx):
         P.WORDDIC = PR.abspath(root, pp.get('wordDicDir') or LEGACY_PATHS['wordDicDir'])
         P.CONTENTS = PR.abspath(root, pp.get('contentsDir') or LEGACY_PATHS['contentsDir'])
         gd = pp.get('guideDir')
-        if gd:
-            P.GUIDE_DIR = PR.abspath(root, gd)
+        P.GUIDE_DIR = PR.abspath(root, gd) if gd else None
+        P.STORYBOARD_SHEETS = dict((pr.get('patterns') or {}).get('storyboardSheets') or {})
         P.GEN = os.path.join(root, '_딕테이션_생성기')
+    else:
+        P.ROOT = ''
+        P.SB_DIR = P.SND = P.WORDDIC = P.CONTENTS = ''
+        P.GUIDE_DIR = None
+        P.STORYBOARD_SHEETS = {}
+        P.UNITS = {}
     for key, attr in (('script_xlsx', 'SND'), ('storyboard_dir', 'SB_DIR'),
                       ('guide_dir', 'GUIDE_DIR'), ('contents_dir', 'CONTENTS')):
         v = ctx.get(key)

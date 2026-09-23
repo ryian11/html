@@ -102,7 +102,7 @@ def underlined(cell):
 
 def load_words():
     wb_ = openpyxl.load_workbook(SB, data_only=True, rich_text=True)
-    ws = wb_['미니 단어장']
+    ws = wb_[P.STORYBOARD_SHEETS.get('miniVocab') or '미니 단어장']
     groups, cur = [], []
     for i, row in enumerate(ws.iter_rows(), 1):
         if i == 1:
@@ -130,7 +130,7 @@ def _pgnum(v):
 
 
 def load_syntax():
-    ws = openpyxl.load_workbook(SB, data_only=True)['구문 해설']
+    ws = openpyxl.load_workbook(SB, data_only=True)[P.STORYBOARD_SHEETS.get('syntax') or '구문 해설']
     out = {}
     for i, r in enumerate(ws.iter_rows(values_only=True), 1):
         if i == 1 or not r[0]:

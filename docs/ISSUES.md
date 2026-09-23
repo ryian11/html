@@ -132,8 +132,30 @@
 
 ## #14. 프로젝트별 구조가 코드에 남아 있어 새 프로젝트 일반화가 어렵다
 
-- **현재 상태** 확인됨. 구조 분석 결과 `recipes/cj_reading.py`, `read_paths.py`, `read_import.py`, `read_gen.py`, `proto_scan.py` 등에 현재 CJ 프로젝트의 경로·파일명·sheet·페이지명·ID 패턴 등이 남아 있다.
+- **현재 상태 (2026-09-23 갱신)** `project_rules.json` 스키마는 확정됐다(schema 1, `SCHEMA.md`). 아래 12개 항목 중 **1·3·12번은 이번에 코드로 연결했고, 3번은 read_gen.py 쪽도 같이 잡았다.** 나머지(2 중 Dictation 검사는 원래 일반적이라 문제 아님, 4·5·6·7·8 일부·9·11)는 남아 있다. 원 조사(줄번호 근거 포함)는 `claude/archive/prototype-이후-전수분석.md` 3·8·9·10장에 그대로 있다.
 - **핵심 문제** 단순히 `rules.json` 항목을 늘리는 문제가 아니다. **프로젝트의 경로·단원·페이지·자료 연결 관계 자체가 데이터로 관리되어야 한다.**
-- **최종 해결 방향** Claude가 프로젝트를 최초 1회 분석하여 `project_rules.json`(가칭)에 프로젝트 지도와 규칙을 기록하고, 일반 생성기는 이 JSON을 읽어 동작하도록 구조를 변경한다.
-- **중요** `discover()`는 필요할 경우 파일 존재 여부 검증 등에 사용할 수 있지만, 프로젝트 구조를 결정하는 주된 방법이 되어서는 안 된다.
-- **추가 확인 필요** 있음. 먼저 JSON 스키마와 기존 `project.json`/`rules.json`의 역할을 확정한 뒤 코드 변경.
+- **최종 해결 방향** Claude가 프로젝트를 최초 1회 분석하여 `project_rules.json`에 프로젝트 지도와 규칙을 기록하고, 일반 생성기는 이 JSON을 읽어 동작하도록 구조를 변경한다. `rules/<recipe>/rules.json`은 recipe의 생성 규칙 저장소로 별도 유지한다(`SCHEMA.md` 1-7절).
+- **중요** `discover()`는 필요할 경우 파일 존재 여부 검증 등에 사용할 수 있지만, 프로젝트 구조를 결정하는 주된 방법이 되어서는 안 된다. 지금은 `units()`(`cj_reading.py:194-211`)가 discover 결과를 JSON에 저장까지 한다 — 이 부분도 "검증 전용"으로 축소해야 한다(원 조사 9장 6순위).
+
+### 반드시 해결해야 하는 것 (최종 목표 — 코드 수정 없이 새 프로젝트 — 달성 조건)
+
+| # | 문제 | 위치(대표) |
+|---|---|---|
+| 1 | ~~`project_rules.json`이 생성기 설치당 1개뿐~~ **해결(2026-09-23)** — `project_rules_io.set_root()` 로 프로젝트 root 마다 `<root>/project_rules.json` 을 따로 읽고 쓴다. `recipes/cj_reading.py:setup()` 이 요청마다 다시 부른다(안 섞임). CJ 프로젝트 실제 파일도 `_딕테이션_생성기/project_rules.json` → `<root>/project_rules.json` 로 옮겼다 | `project_rules_io.py:set_root/_path`, `cj_reading.py:setup()` |
+| 2 | 스토리보드 시트 이름 3종(`미니 단어장`/`구문 해설`/`dictation`)이 코드 리터럴 | `read_gen.py:36,105,133` |
+| 3 | ~~`rules.json`의 `storyboard.sheet.*` 키 이름 불일치~~ **해결(2026-09-23)** — `rules.json` 키는 그대로 두되(하위 호환), `patterns.storyboardSheets.{syntax,miniVocab,dictation}` 를 새로 만들어 `read_paths.STORYBOARD_SHEETS` 로 꽂고 `read_import.py:syntax_sentences()` 와 `read_gen.py:load_words()/load_syntax()` 가 이 값을 먼저 보게 했다(JSON에 없으면 지금까지 쓰던 CJ 기본값) | `read_paths.py:STORYBOARD_SHEETS`, `read_import.py:syntax_sentences`, `read_gen.py:load_words/load_syntax` |
+| 4 | mp3 접두사 `3_`이 리터럴 — **오류 없이 잘못된 파일명으로 생성됨(조용한 실패)**. 이번에 재확인했고 실제로 존재함을 확인(줄번호도 맞음). 아직 `patterns.mp3Prefix` 연결은 안 했다 — schema 에는 있는데 코드가 안 읽는 상태 그대로다 | `read_gen.py:226,737,762,909`, `read_import.py:824` |
+| 5 | 지도서 PDF 지면 좌표 7종(`GUIDE_MID=341.0` 등)이 코드 상수 | `read_import.py:856-872` |
+| 6 | 지시문 시트를 "첫 시트"로 가정 + 열 번호(`r[2]`,`r[4]`) 리터럴 | `read_import.py:557-566` |
+| 7 | 페이지 파일명 `p###_##`가 생성 경로에서 리터럴 — `patterns.pageFilename`을 JSON에 넣어도 이 경로는 안 읽음 | `read_import.py:279,585`, `read_gen.py:1193,1197` |
+| 8 | `read_paths.py`의 경로 추측 폴백 — **부분 해결(2026-09-23)**: 등록 안 된 단원이 숫자가 아니면(`int(n)` 실패) 조용히 크래시하는 대신 무엇을 등록해야 하는지 알려 주게 고쳤다(`storyboard/ops/guide_pdf` 3곳). **폴백 자체(숫자 단원의 경로를 패턴으로 추측하는 동작)는 의도된 최후 수단이라 그대로 남겨 뒀다** — 이미 등록된 9개 단원에는 영향이 없다 | `read_paths.py:_need_numeric,storyboard,ops,guide_pdf` |
+| 9 | 음원 코너 키가 리터럴(`'read'`/`'word'`/…) — 코너 이름 체계가 다르면 단원 전체가 `SystemExit`로 실패 | `read_import.py:386,394,428,488,512,549,570` |
+| 10 | `int(n)`/`%d`로 인한 문자열 단원 크래시 (5곳 — proto_lesson 등 일부는 2026-09-22에 이미 고침, 나머지는 남음) | `read_import.py:129,186`, `read_paths.py:49,56,81`, `proto_scan.py:112,341` |
+| 11 | `ops` 하위폴더명 고정 + `_slug()` 소문자화로 단원 id 중복 등록 위험 | `cj_reading.py:179,183` |
+| 12 | ~~`patterns.guidePdf`가 코드에 연결 안 됨~~ **해결(2026-09-23)** — `read_paths.guide_pdf()` 가 `project_rules_io.pattern('guidePdf', 기본값)` 을 실제로 읽는다 | `read_paths.py:guide_pdf` |
+
+### 지금 당장 수정하지 않아도 되는 것 (recipe 고유 규칙 또는 일반 로직이라 문제 아님)
+
+`read_measure.py`의 여백 상수, `rules.json`의 `popup.*`/`skeleton.body.*`/`assets.*`(recipe 고유 규칙), `read_import.py`의 언어 처리 로직(`wordpat()` 등), `app.py`/`rules_io.py`의 `'cj_reading'` 기본 인자(레시피가 하나뿐이라 무해), `cj_reading.py:83`의 죽은 대입 `P.GEN`, `info.*`/`popup.intro.*` 미사용(설계상 의도됨). 근거는 `claude/archive/prototype-이후-전수분석.md` 10장 B·C.
+
+- **추가 확인 필요** 없음 — 위 12개 항목이 "6. project_rules.json 스키마 코드 반영" 단계의 실제 작업 목록이다.

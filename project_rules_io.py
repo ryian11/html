@@ -18,45 +18,75 @@ Python 코드에는 "JSON 에 없으면 쓸 안전한 기본값"으로만 남는
 `GEN`(생성기 자기 설치 위치)은 여기 넣지 않는다 — 프로젝트 자료가 아니라
 생성기 프로그램 자신이 어디 깔려 있는지이기 때문이다(지금처럼 코드에서 계산).
 
+저장 위치(2026-09-23 확정) — **프로젝트 root 바로 아래**:
+    <project root>/project_rules.json
+생성기 설치 폴더(이 파일이 있는 곳) 에는 두지 않는다. 프로젝트가 여러 개면
+프로젝트마다 자기 root 아래 자기 project_rules.json 을 따로 가진다 — 생성기
+코드는 공용이고 프로젝트별 자료만 이렇게 나뉜다. 어느 root 를 다룰지는
+set_root() 로만 정한다(recipe.setup() 이 매 요청마다 부른다) — root 를
+아직 안 정했는데 load()/save() 를 부르면 조용히 어딘가로 새지 않고
+분명한 오류를 낸다.
+
   {"schema": 1,
    "project": {"name": "...", "root": "...", "recipe": "cj_reading"},
    "paths": {"storyboardDir": "...", "soundXlsx": "...", "wordDicDir": "...",
              "contentsDir": "...", "guideDir": null},
    "patterns": {"storyboardFilename": "...", "specialUnitFilename": "...",
                 "contentsFolder": "...", "pageFilename": "...",
-                "guidePdf": "...", "soundSheet": "..."},
+                "guidePdf": "...", "soundSheet": "...",
+                "storyboardSheets": {"syntax": "...", "miniVocab": "...", "dictation": "..."}},
    "units": [{"id": "1", "name": "1단원", "storyboard": "...", "ops": "...", "sheet": "1과"}, ...],
-   "prototype": {"lesson": "3", "analyzedPages": [...], "rulesFile": "rules/cj_reading/rules.json"}}
+   "prototype": {"units": [{"id": "6", "pages": ["p104_01", "p104_02"]}, ...]}}
 
 경로는 project.json 과 같은 관례로, 프로젝트 폴더(root) 기준 상대 경로로 적는다.
 """
 import io, os, json
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PATH = os.path.join(HERE, 'project_rules.json')
 
 SCHEMA = 1
+
+_ROOT = None    # 지금 다루는 프로젝트의 root. set_root() 로만 바뀐다.
+
+
+def set_root(root):
+    """이 모듈이 다룰 프로젝트를 정한다. recipe.setup() 이 매 요청마다 부른다.
+
+    root 가 없으면(프로젝트를 아직 못 골랐을 때) None 을 넘긴다 — 그 뒤 load()/save()
+    를 부르면 분명한 오류가 난다. 예전 자리(생성기 폴더)로 조용히 새지 않는다.
+    """
+    global _ROOT
+    _ROOT = root
+
+
+def _path():
+    if not _ROOT:
+        raise RuntimeError(
+            'project_rules_io.set_root() 가 아직 안 불렸습니다 — 프로젝트 root 를 먼저 정하세요.')
+    return os.path.join(_ROOT, 'project_rules.json')
 
 
 def load():
     """project_rules.json 을 읽는다. 없으면 None."""
-    if not os.path.isfile(PATH):
+    p = _path()
+    if not os.path.isfile(p):
         return None
     try:
-        return json.loads(io.open(PATH, encoding='utf-8').read())
+        return json.loads(io.open(p, encoding='utf-8').read())
     except Exception:
         return None
 
 
 def save(d):
     d['schema'] = SCHEMA
-    io.open(PATH, 'w', encoding='utf-8', newline='\n').write(
+    p = _path()
+    io.open(p, 'w', encoding='utf-8', newline='\n').write(
         json.dumps(d, ensure_ascii=False, indent=1, sort_keys=False))
-    return PATH
+    return p
 
 
 def exists():
-    return os.path.isfile(PATH)
+    return os.path.isfile(_path())
 
 
 def blank():

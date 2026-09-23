@@ -1,10 +1,10 @@
 # HTML Generator — 프로젝트 설명서
 
 > 이 문서가 **기준 문서**다. 작업을 시작할 때 이것부터 읽는다.
-> 규칙은 `RULES.md`, 진행 기록은 `PROGRESS.md`, 문제는 `ISSUES.md` 에 있다.
+> 규칙은 `RULES.md`, 진행 기록은 `PROGRESS.md`, 문제는 `ISSUES.md`, project_rules.json 구조는 `SCHEMA.md`에 있다.
 > 같은 내용을 두 문서에 적지 않는다.
 >
-> 작성 근거: 2026-09-20 코드 전수 조사. 추측 없이 실제 코드만 적었다.
+> 작성 근거: 2026-09-20 코드 전수 조사 + 2026-09-22 스키마 확정. 추측 없이 실제 코드만 적었다.
 
 ---
 
@@ -56,38 +56,38 @@ project_rules.json
 | 규칙 출처 | 전부 프로토에서 | **19항목만** `rules.json` 에서 읽는다. 나머지 HTML 뼈대·본문 마크업·팝업 내부 구조는 `read_gen.py` 의 템플릿 문자열에 그대로 있다 |
 | 자료 읽기 규칙 | 프로토/설정에서 | `read_import.py` 의 시트 이름·mp3 ID 규칙은 **코드 고정** (rules.json 에 항목은 있으나 읽지 않는다) |
 | 쪽 이름 | 프로젝트마다 다름 | `p\d{3}_\d{2}` 를 **정규식으로 여러 곳에 박아** 두었다 |
-| 프로토 | 프로젝트마다 지정 | 지금은 3단원. `settings.json` 의 `proto_lesson` 으로 지정. **최종적으로는 Claude 분석 JSON에 기록** |
+| 프로토 | 프로젝트마다 지정 | 지금은 3단원. `settings.json` 의 `proto_lesson` 으로 지정하던 것을 2026-09-22에 `project_rules.json["prototype"]["units"]`(3·6·special_lesson)로 옮겼다. 드롭다운은 이 목록만 보여준다 |
 
 ---
 
-## 1-1. 프로젝트 JSON의 역할 (새 기준)
+## 1-1. 프로젝트 JSON의 역할 (확정 — 2026-09-22)
 
-현재 `project.json`은 단원 등록과 일부 설정을 담고 있지만, **최종 목표의 프로젝트 지도 전체를 담당하는 파일은 아니다.** 앞으로는 Claude 최초 분석 결과를 별도의 프로젝트 분석 JSON(가칭 `project_rules.json`)으로 관리하는 방향을 기준으로 한다.
+`project_rules.json` 스키마가 확정됐다(schema 2). 정확한 필드 목록·필수/선택 구분·예시는 `SCHEMA.md`에 있다 — 여기서는 역할만 요약한다.
 
-### JSON에 반드시 포함해야 하는 프로젝트별 정보
+> **`project_rules.json` = 이 프로젝트의 구조·경로·단원·prototype 정보. 프로젝트마다 1개, Claude(또는 사람)가 분석해서 만든다.**
+> **`rules/<recipe>/rules.json` = 이 recipe가 HTML을 만드는 방법. recipe마다 1개, 여러 프로젝트가 재사용한다.**
 
-- 프로젝트 root
-- 스토리보드 파일/폴더 경로
-- 녹음/사운드 Excel 경로
-- 각 Excel의 실제 sheet 이름
-- 지도서/PDF 경로
-- 이미지/오디오 경로
-- contents/산출 경로
-- 단원 목록과 단원별 실제 경로
-- 단원별 자료 연결 정보
-- prototype 단원과 prototype 페이지 경로
-- 페이지 목록, 순서, 타입, 파일명
-- 페이지와 storyboard/Excel/audio/image의 연결 관계
-- HTML/CSS/JS/popup 구조
-- 프로젝트별 예외와 특수 단원 규칙
+`project.json`(단원 목록)은 `project_rules.json`의 `units[]`과 완전히 중복되므로 더 이상 기준이 아니다 — 폐기 대상이지만 **코드에서 아직 제거하지 않았다**(제거는 스키마를 코드에 반영하는 단계에서, `ISSUES.md` #14 참고).
 
-### 일반 생성기의 원칙
+### 일반 생성기의 원칙 (변경 없음)
 
 - JSON에 기록된 경로를 그대로 사용한다.
 - `Lesson 01`, `lesson01`, `p001_01` 같은 현재 프로젝트의 형식을 새로운 프로젝트의 공통 규칙으로 가정하지 않는다.
 - JSON에 없는 값을 코드가 조용히 추측하지 않는다.
 - 필요한 정보가 없으면 누락/오류로 알려준다.
 - 파일 존재 여부 확인은 가능하지만, **프로젝트 구조를 결정하는 주체는 JSON**이다.
+
+**지금 코드 상태**: 위 원칙에 아직 안 맞는 부분(경로 추측 폴백, 코드에 박힌 시트명·mp3 접두사 등)이 남아 있다 — 전부 `ISSUES.md` #14와 `RULES.md` 0장에 정리돼 있다. **스키마 확정은 "규칙을 정한 것"이지 "코드가 그 규칙을 따르게 한 것"이 아니다** — 코드 반영은 별도 단계다.
+
+## 1-2. 왜 이 방향을 택했는가 (2026-09-16 검증, 상세 근거는 `claude/archive/범용-HTML생성도구-설계안.md`)
+
+6·7·8단원을 실제로 만들어 본 뒤, 최초 설계(1차 구성안)의 다음 3가지 가정이 틀렸다는 것이 확인됐다.
+
+1. **"Claude가 프로젝트당 0번 호출된다"는 가정은 틀렸다.** 실제로는 프로젝트 시작 시 1회(구조 분석), 단원마다 소량(견본 페이지 분석), 새로운 구조가 나올 때 극소량이 필요했다. 0회인 것은 **같은 단원을 다시 생성**하는 경우뿐이다.
+2. **기준본(golden test) 대조만으로는 부족하다.** 7단원의 scrollTop 버그처럼 기준본과 우연히 같아도 실제로는 틀린 값이 있었다 — 그래서 기준본 대조와는 별개로 불변조건(invariant) 검사가 필요하다는 결론이 나왔다.
+3. **페이지를 "타입"으로 나누는 접근은 틀렸다.** 실제로는 페이지 타입이 하나(Reading 본문)이고, 그 안의 선택적 요소(들머리 유무·해석 원천·팝업 종류)가 프로젝트/단원마다 다를 뿐이었다.
+
+이 재검증 결과가 지금의 recipe 구조(`runner.py` + `recipes/`)와 `project_rules.json`/`rules.json` 역할 분리(1-1)의 근거다.
 
 ---
 
@@ -118,7 +118,7 @@ project_rules.json
    ├─ 단원자료/                           data<N>.py · layout<N>.json · 잰 값
    ├─ _backup/                           산출물·layout·잰값 백업
    ├─ docs/                              ← 이 문서들
-   └─ 문서/                               과거 작업 기록 (PROGRESS.md 17장 참고)
+   └─ 문서/                               과거 작업 기록 (PROGRESS.md 10장 참고)
 ```
 
 ---
@@ -141,7 +141,8 @@ project_rules.json
     연결 : UI ③ 단원 칸 (GET /api/recipe/<id>)
 
 [3] 프로토 분석  ※ 생성과 별개. 결과는 rules/ 에만 쌓인다
-    입력 : 프로토 단원의 ops 폴더(HTML·CSS), 녹음 대본, 스토리보드
+    입력 : project_rules.json["prototype"]["units"]에 등록된 단원·페이지만
+           (2026-09-22부터 — 폴더 재탐색이 아니라 JSON 등록 목록을 그대로 씀)
     처리 : cj_reading.analyze() → proto_scan.scan()
     출력 : rules/cj_reading/proto_L<N>.json
     승격 : rules_io.promote() → rules/cj_reading/rules.json
@@ -188,7 +189,8 @@ project_rules.json
 | `runner.py` | 레시피 로더, `Ctx`, 4단계 실행, 백업/되돌리기, `.pyc` 청소 | 공통 |
 | `recipes/cj_reading.py` | 이 교재의 절차. 경로 조립·단원 찾기·4단계 구현 | **종속** |
 | `read_paths.py` | 경로 상수, 단원 등록부(`UNITS`), `pgkey()` | **종속** (상수) |
-| `project_io.py` / `project.json` | 단원 목록 저장소 | 공통 |
+| `project_io.py` / `project.json` | 단원 목록 저장소 (project_rules.json의 units[]와 중복 — 폐기 대상) | 공통 |
+| `project_rules_io.py` / `project_rules.json` | 프로젝트 구조·경로·단원·prototype 지도 (schema 2) | 공통 구조 + **종속 데이터** |
 | `proto_scan.py` | 프로토 HTML/CSS/엑셀에서 규칙 뽑기 | 대체로 공통 (쪽 이름 정규식만 종속) |
 | `rules_io.py` | proto_L\<N\>.json ↔ rules.json ↔ 코드 값 대조 | 공통 |
 | `read_import.py` | 원고 → `data<N>.py` | **종속** (시트 이름·ID 규칙) |
@@ -202,11 +204,12 @@ project_rules.json
 
 ## 5. 프로토 HTML 과 규칙 분석의 관계
 
-- **프로토 단원** = 이 생성기가 만들지 **않은** 원래 납품 HTML. 현재 3단원.
-  (6·7·8단원은 이 생성기가 만든 결과라 견본으로 쓰면 배울 것이 없다 — 순환)
+- **프로토 단원** = 이 생성기가 만들지 **않은** 원래 납품 HTML. 현재 3단원(3·6·special_lesson이 `project_rules.json["prototype"]["units"]`에 등록됨).
+  (7·8단원은 이 생성기가 만든 결과라 견본으로 쓰면 배울 것이 없다 — 순환)
 - `proto_scan.scan()` 이 프로토 쪽의 `*.html` 과 `css/*.css`, 그리고 녹음 대본·스토리보드를 읽어
   `proto_L<N>.json` 에 항목을 적는다. `source` 로 어디서 봤는지 남긴다
   (`html` / `css` / `xlsx` / `none`).
+- 견본 페이지 목록은 **JSON에 등록된 것만** 화면에 보인다(2026-09-22부터 — 폴더를 다시 훑어 더 찾지 않는다).
 - `rules_io.promote()` 가 고른 항목을 `rules.json` 으로 옮긴다.
 - `rules_io.compare()` / `report()` 가 `rules.json` 과 **지금 코드가 내놓는 값**을 견준다.
   코드 쪽 값은 `_기준본` 을 프로토와 같은 잣대로 다시 읽어 만든다(`code_rules()`).
@@ -219,6 +222,7 @@ project_rules.json
   → `rules.json` 을 지워도 결과가 달라지지 않는다.
 - 값 안의 `{page}` · `{lesson}` 은 `read_gen._fill()` 이 채운다.
 - 실제로 쓰이는 항목과 아직 안 쓰이는 항목의 구분은 `RULES.md` 에 있다.
+- `project_rules.json`과의 역할 차이는 `SCHEMA.md` 1장(1-7절)에 정리돼 있다 — 요약하면 **rules.json = recipe가 재사용하는 "만드는 방법"**, **project_rules.json = 프로젝트마다 새로 분석하는 "프로젝트 사실"**.
 
 ## 7. 데이터와 생성기의 관계
 
@@ -241,7 +245,8 @@ layout<N>.json : 문단 나눔(paras) · 라벨 · 말하는 이 · 지면 글�
 
 ```
 ① 자료      root + 선택 칸 4개 → [자료 경로 저장]   (+ 접이식: 단원별 자료 = 시트·지도서 PDF)
-② 프로토    프로토 단원 / 프로토 ops → [견본 쪽 불러오기] [프로토 분석] [승격] [코드와 대조]
+② 프로토    프로토 단원(드롭다운 — project_rules.json 등록분만) / 프로토 ops
+            → [견본 쪽 불러오기] [프로토 분석] [승격] [코드와 대조]
 ③ 단원      체크박스 (project.json 의 units)
 ④ 쪽        체크박스 (비우면 단원 전체) + [전체 선택] [전체 해제]
 ⑤ 단계      추출 / 생성 / 측정 / 검증 체크박스 → [생성]
@@ -260,7 +265,7 @@ layout<N>.json : 문단 나눔(paras) · 라벨 · 말하는 이 · 지면 글�
 |---|---|---|---|
 | ① 자료 경로 + 저장 | `POST /api/settings` → `settings.json` → `setup()` | **A** | 이것 없이는 아무것도 못 찾는다 |
 | ① 단원별 자료(시트·지도서 PDF) | `POST /api/project` → `project.json` | **A** | 교재마다 다른 값. 파일을 직접 안 고치게 하는 칸 |
-| ② 견본 쪽 불러오기 | `GET /api/proto` → `proto_pages()` | **B** | 분석 대상 쪽을 고르는 보조 |
+| ② 견본 쪽 불러오기 | `GET /api/proto` → `project_rules_io.proto_pages()` | **B** | 분석 대상 쪽을 고르는 보조 (JSON 등록분만) |
 | ② 프로토 분석 | `POST /api/analyze` → `proto_scan.scan()` | **B**(→장차 A) | 지금은 `rules/` 에만 쌓임. 설계상으로는 A 가 되어야 함 |
 | ② 승격 | `POST /api/promote` → `rules_io.promote()` | **B**(→장차 A) | 위와 같음 |
 | ② 코드와 대조 | `GET /api/compare` → `rules_io.report()` | **B** | 규칙과 코드가 어긋나는지 보는 개발용 |
@@ -313,6 +318,7 @@ layout<N>.json : 문단 나눔(paras) · 라벨 · 말하는 이 · 지면 글�
 | 회귀 검사 | `regress.py` |
 | 묵은 `.pyc` 청소 | `runner.purge_pyc/refresh_modules` |
 | 쪽 번호 정규화 | `read_paths.pgkey()` |
+| 프로젝트 구조 지도(`project_rules.json`) | `project_rules_io.py` |
 
 ---
 
@@ -360,10 +366,29 @@ layout<N>.json : 문단 나눔(paras) · 라벨 · 말하는 이 · 지면 글�
 
 ## 12. 아직 확정되지 않은 것
 
-- Claude 분석 JSON과 기존 `project.json`/`rules.json`의 최종 역할 분담을 어떻게 할 것인가.
+- ~~Claude 분석 JSON과 기존 `project.json`/`rules.json`의 최종 역할 분담~~ → **확정됨(2026-09-22)**. `SCHEMA.md` 참고. `project.json`은 폐기 대상, `rules.json`은 recipe별 생성 규칙 저장소로 역할이 남는다.
 - `read_gen` 의 HTML 뼈대(본문 마크업·팝업 내부 구조)를 프로젝트 JSON/규칙 데이터로 어디까지 옮길 것인가.
 - `read_import` 의 자료 읽기 규칙(시트 이름·ID 패턴·열 번호)을 프로젝트 JSON/규칙 데이터로 옮길 것인가.
   (`rules.json` 에 항목은 있으나 `read_import` 는 읽지 않는다)
 - 쪽 이름 규칙(`p\d{3}_\d{2}`)을 어떻게 일반화할 것인가.
 - 프로토에서 못 뽑는 3항목(측정 여백)을 어디에 둘 것인가.
+- mp3 파일명이 "접두사 차이"가 아니라 **조립 순서 자체가 다른 프로젝트** — `patterns.mp3Prefix`로는 못 덮는다. recipe(`rules.json`) 쪽 템플릿 필드 확장이 별도로 필요하다(스키마 확정 과정에서 새로 발견, `SCHEMA.md` 참고).
 - 1~6단원을 이 생성기로 다시 만들 것인가 → **만들지 않기로 했다**(2026-09-17 결정).
+
+---
+
+## 부록 A. 실행 방법 (요약 — 전체는 `README_runner.md`)
+
+```
+HTML생성기.vbs 두 번 클릭         → 127.0.0.1:8765 화면
+py app.py [--port 9000]          → 같은 화면, 콘솔에서(문제 확인용)
+py runner.py                     → 레시피 목록
+py runner.py cj_reading 7        → 7단원 추출→생성→측정→검증
+py runner.py cj_reading 7 --steps build,verify
+py runner.py cj_reading 7 --out C:\temp\t7     → 실기 안 건드리고 딴 데 뽑기
+py runner.py cj_reading 7 --restore 20260916_1030
+py regress.py save  cj_reading 7 8             → 지금 결과를 기준본으로
+py regress.py check cj_reading                 → 기준본과 견주기
+```
+
+세부 사용법(설정 패널·프로토 분석·쪽만 재생성·묵은 `.pyc` 문제 등)은 `README_runner.md`에 그대로 있다. 이 부록은 그 문서를 대체하지 않는다 — 빠르게 찾기용 요약이다.

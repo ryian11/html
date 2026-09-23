@@ -27,7 +27,9 @@
 
 그래서 새 단원 한 개가 이렇게 끝납니다.
 
-> 원고 옮겨 적기 → `python read_run.py 7` → 화면 보고 CSS 숫자 몇 개 조정 → 다시 돌리기
+> **참고 (2026-09-23):** 옛 CLI 진입점 `read_run.py` 는 project_rules.json 을 읽는 `setup()` 을 거치지 않는 우회 경로라 삭제했습니다. 지금은 화면([생성] 버튼)이 유일한 실행 경로입니다 — 아래 "② 돌리기" 참고.
+>
+> 원고 옮겨 적기 → 화면에서 [생성] → 화면 보고 CSS 숫자 몇 개 조정 → 다시 [생성]
 
 ---
 
@@ -43,7 +45,7 @@ playwright install chromium
 ```
 
 `playwright install chromium` 은 측정용 크롬을 내려받습니다(200MB 남짓, 한 번만).
-이게 없으면 생성·검증은 되지만 **측정은 건너뜁니다**(`read_run.py` 가 알려 줍니다).
+이게 없으면 생성·검증은 되지만 **측정은 건너뜁니다**(화면 로그가 알려 줍니다).
 
 ## 1-2. 경로 확인
 
@@ -190,58 +192,45 @@ reading.css 가 `.ParagraphBox { position:absolute }` 라 두 상자가 겹칩�
 
 ## ② 돌리기
 
+`HTML생성기.vbs` 를 두 번 눌러 화면을 엽니다. ①자료에서 단원을 고르고
+아래 `#steps` 에서 [추출] [생성] [측정] [검증] 이 전부 체크된 채로
+[생성] 버튼을 누릅니다 — 이 화면이 `/api/run` 을 부르고, 안에서 하는 일은
+예전 `read_run.py` 와 같습니다(같은 `recipes/cj_reading.py` 함수를 부릅니다):
+
 ```
-python read_run.py 7
+[생성] 누름
+ ↓
+POST /api/run  {recipe, units:[7], steps:[extract,build,measure,verify]}
+ ↓
+runner.run()  →  recipes/cj_reading.py 의 extract → build → measure → verify
 ```
 
-화면에 이렇게 나옵니다.
+로그 칸(화면 아래)에 이렇게 나옵니다.
 
 ```
-============================================================
- lesson07 Reading 본문 페이지
- 원고 : E:\...\Lesson 7.xlsx
- 산출 : E:\...\lesson07\ops
-============================================================
-[backup] 14개 → E:\...\lesson07\ops\_backup\20260915_1030
-
-[1/4] 생성
-  p118_02  단어 3  구문 3
-  ...
-[2/4] 측정
+[backup] 14개 → (생성기 폴더)\_backup\산출물\cj_reading\7\20260915_1030
+[extract] ...
+[build] p118_02  단어 3  구문 3  ...
 [measure] 본문 페이지
   p118_02  쪽높이 1508  최대스크롤 875  묶음 {'02':478, ...}
-    title.png  800x298  단어상자 x: [...]
-    title.png  → WORDBTN left 후보: 224
-[measure] 해석 팝업
-[measure] 전체 듣기 팝업
-[measure] 겹침·넘침 없음
-
-[3/4] 측정값 넣어 다시 생성
-[4/4] 검증
-  OK   파일 형식 22개 (CRLF · 끝개행 없음 · div 짝)
-  OK   본문 문장 수 · mark/구문 번호 · 원고 대조
-  ...
+[measure] 해석 팝업 / 전체 듣기 팝업 / 겹침·넘침 없음
+[verify] OK  파일 형식 22개 (CRLF · 끝개행 없음 · div 짝)
 [verify] 통과
 ```
 
 무슨 일이 일어나는지
 
-1. **백업** — 덮어쓸 파일을 `ops\_backup\<날짜_시각>\` 에 그대로 복사합니다. 되돌리려면 여기서 꺼내면 됩니다.
+1. **백업** — 덮어쓸 파일을 생성기 폴더의 `_backup\산출물\cj_reading\<단원>\<날짜_시각>\` 에 그대로 복사합니다. 화면의 [이전 결과로 되돌리기] 로 꺼내면 됩니다.
 2. **생성** — `data7.py` + 엑셀로 HTML/CSS/JS/팝업을 만듭니다. 이때 scrollTop 은 아직 없습니다.
 3. **측정** — 만든 파일을 크롬으로 열어 **실제 줄바꿈과 글자 위치를 재서**
    `scrolls7.py` · `popscroll7.py` · `krlayout7.py` 를 **새로 씁니다.**
 4. **재생성** — 잰 값을 넣어 다시 만듭니다.
 5. **검증** — 아래 ④.
 
-옵션
+옵션 (예전 `--show`/`--no-measure` 대응)
 
-```
-python read_run.py 7 --show        측정하는 크롬 창을 보면서
-python read_run.py 7 --no-measure  측정 건너뛰고 있는 값으로 다시 만들기만
-```
-
-`--no-measure` 는 **CSS_LAYOUT 만 조금 고쳤고 줄바꿈은 안 변했을 때** 빠르게 다시 찍는 용도입니다.
-글자를 고쳤으면 반드시 측정까지 다시 하세요.
+* **측정 건너뛰기** — `#steps` 에서 [측정] 체크를 끄고 [생성] 을 누릅니다. **CSS_LAYOUT 만 조금 고쳤고 줄바꿈은 안 변했을 때** 빠르게 다시 찍는 용도입니다. 글자를 고쳤으면 반드시 측정까지 다시 하세요.
+* **측정 과정을 눈으로 보기** — 예전 `--show`(크롬 창을 띄워서 측정)는 화면 경로에 없습니다. 이번 정리에서 따로 복구하지 않았습니다 — 필요하면 `read_measure.py` 를 직접 헤드리스 아님으로 돌려야 합니다.
 
 ---
 
@@ -331,7 +320,7 @@ py read_import.py 6 --out C:\temp\data6_auto.py
 **둘. 실기에서 페이지를 열어 문단 위치**
 
 배경 그림 위에 글이 제대로 앉았는지 봅니다. 어긋나면 `CSS_LAYOUT` 만 고치고
-`python read_run.py 7` 을 다시 돌립니다.
+화면에서 [생성] 을 다시 누릅니다.
 
 > ⚠ `scrolls7.py` · `krlayout7.py` · `popscroll7.py` 는 **손대지 마세요.**
 > 다음 실행에서 통째로 덮어써집니다. 이 파일들은 기계가 쓰는 메모입니다.
@@ -340,7 +329,7 @@ py read_import.py 6 --out C:\temp\data6_auto.py
 
 ## ④ 검증
 
-`read_run.py` 안에 들어 있지만 따로도 돌릴 수 있습니다.
+화면([생성]의 검증 단계)에 들어 있지만 따로도 돌릴 수 있습니다.
 
 ```
 python read_verify.py 7
@@ -373,7 +362,6 @@ python read_verify.py 7
 | `read_gen.py` | — | 생성기 본체. `python read_gen.py 7 [--out DIR]` |
 | `read_measure.py` | — | Playwright 측정 |
 | `read_verify.py` | — | 검증 |
-| `read_run.py` | — | 위를 묶은 진입점 |
 | `scrolls<N>.py` | **기계** | 본문 scrollTop |
 | `popscroll<N>.py` | **기계** | 해석·전체듣기 팝업 scrollTop |
 | `krlayout<N>.py` | **기계** | 해석 줄 배치 |
@@ -392,7 +380,7 @@ python read_gen.py 6 --out C:\temp\cj6out
 그리고 `C:\temp\cj6out` 과 `E:\...\lesson06\ops` 를 비교합니다(WinMerge 나 `fc /b`).
 `html · css · js · popup` 이 **전부 같아야** 합니다. 다르면 도구나 `data6.py` 가 바뀐 것입니다.
 
-측정까지 같은지 보려면 `python read_run.py 6` 을 돌린 뒤 `scrolls6.py` 를 엽니다. 지금 값은
+측정까지 같은지 보려면 화면에서 6단원을 [생성](측정 포함)한 뒤 `scrolls6.py` 를 엽니다. 지금 값은
 
 ```
 p104_02  02–04 = 478,   05–06 = 838
